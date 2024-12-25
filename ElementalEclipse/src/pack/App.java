@@ -7,12 +7,15 @@ import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
+import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 public class App extends Application {
     @Override
     public void start(Stage primaryStage) {
         // Create a 3D box
+    	Rotate x = new Rotate(0, Rotate.Y_AXIS);
+    	Rotate y = new Rotate(0, Rotate.X_AXIS);
         Box box = new Box(100, 100, 100); // Width, Height, Depth
         Box box2 = new Box(20, 10, 30);
         // Apply material to the box
@@ -38,7 +41,9 @@ public class App extends Application {
         // Create a camera for better 3D rendering
         PerspectiveCamera camera = new PerspectiveCamera(true);
         camera.setTranslateZ(-500); // Position the camera
+        camera.setTranslateX(100);
         camera.setFarClip(1000.0D);
+        camera.getTransforms().addAll(x, y);
         // Create a scene and add the group to it
         Scene scene = new Scene(root, 1200, 800, true); // Enable depth buffer with `true`
         scene.setFill(Color.GRAY); // Background color
