@@ -44,7 +44,7 @@ public class App extends Application {
 
         // Set up the scene
         Scene scene = new Scene(root, 800, 600, true);
-        scene.setFill(Color.WHITE);
+        scene.setFill(Color.RED);
         scene.setCamera(camera);
         Box b = new Box(100, 100, 100);
         root.getChildren().add(b);
@@ -53,7 +53,7 @@ public class App extends Application {
         primaryStage.setFullScreen(true);
         primaryStage.show();
 
-        setupMovement(scene, camera, primaryStage);
+//        setupMovement(scene, camera, primaryStage);
 
         scene.setCursor(Cursor.NONE);
 
@@ -74,7 +74,7 @@ public class App extends Application {
             cameraRotationAngleX -= deltaY * sensitivity; // Vertical rotation (pitch)
 
             // Clamp vertical rotation (pitch) to avoid flipping the camera
-            cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
+//            cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
 
             // Apply rotations to camera
             rotateY.setAngle(cameraRotationAngleY);
@@ -87,76 +87,76 @@ public class App extends Application {
         });
     }
 
-    private void setupMovement(Scene scene, PerspectiveCamera camera, Stage primaryStage) {
-        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 0, 2, 0);
-        }));
-        moveF.setCycleCount(Timeline.INDEFINITE);
-
-        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 2, 0, 0);
-        }));
-        moveR.setCycleCount(Timeline.INDEFINITE);
-
-        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 0, -2, 0);
-        }));
-        moveB.setCycleCount(Timeline.INDEFINITE);
-
-        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, -2, 0, 0);
-        }));
-        moveL.setCycleCount(Timeline.INDEFINITE);
-
-        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 0, 0, -2);
-        }));
-        moveU.setCycleCount(Timeline.INDEFINITE);
-
-        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 0, 0, 2);
-        }));
-        moveD.setCycleCount(Timeline.INDEFINITE);
-
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.W) moveF.play();
-            if (e.getCode() == KeyCode.D) moveR.play();
-            if (e.getCode() == KeyCode.S) moveB.play();
-            if (e.getCode() == KeyCode.A) moveL.play();
-            if (e.getCode() == KeyCode.SPACE) moveU.play();
-            if (e.getCode() == KeyCode.SHIFT) moveD.play();
-            if (e.getCode() == KeyCode.ESCAPE) {
-                primaryStage.close();
-            }
-        });
-
-        scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.W) moveF.stop();
-            if (e.getCode() == KeyCode.D) moveR.stop();
-            if (e.getCode() == KeyCode.S) moveB.stop();
-            if (e.getCode() == KeyCode.A) moveL.stop();
-            if (e.getCode() == KeyCode.SPACE) moveU.stop();
-            if (e.getCode() == KeyCode.SHIFT) moveD.stop();
-        });
-    }
-
-    private void moveCamera(PerspectiveCamera camera, double deltaX, double deltaZ, double deltaY) {
-        double yaw = Math.toRadians(cameraRotationAngleY);
-
-        // Calculate forward and right vectors based on yaw angle
-        double forwardX = Math.sin(yaw);
-        double forwardZ = Math.cos(yaw);
-        double rightX = Math.cos(yaw);
-        double rightZ = -Math.sin(yaw);
-
-        camera.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
-        camera.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
-        camera.setTranslateY(camera.getTranslateY() + deltaY);
-    }
-
-    private double clamp(double value, double min, double max) {
-        return Math.max(min, Math.min(max, value));
-    }
+//    private void setupMovement(Scene scene, PerspectiveCamera camera, Stage primaryStage) {
+//        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+//            moveCamera(camera, 0, 2, 0);
+//        }));
+//        moveF.setCycleCount(Timeline.INDEFINITE);
+//
+//        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+//            moveCamera(camera, 2, 0, 0);
+//        }));
+//        moveR.setCycleCount(Timeline.INDEFINITE);
+//
+//        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+//            moveCamera(camera, 0, -2, 0);
+//        }));
+//        moveB.setCycleCount(Timeline.INDEFINITE);
+//
+//        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+//            moveCamera(camera, -2, 0, 0);
+//        }));
+//        moveL.setCycleCount(Timeline.INDEFINITE);
+//
+//        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+//            moveCamera(camera, 0, 0, -2);
+//        }));
+//        moveU.setCycleCount(Timeline.INDEFINITE);
+//
+//        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+//            moveCamera(camera, 0, 0, 2);
+//        }));
+//        moveD.setCycleCount(Timeline.INDEFINITE);
+//
+//        scene.setOnKeyPressed(e -> {
+//            if (e.getCode() == KeyCode.W) moveF.play();
+//            if (e.getCode() == KeyCode.D) moveR.play();
+//            if (e.getCode() == KeyCode.S) moveB.play();
+//            if (e.getCode() == KeyCode.A) moveL.play();
+//            if (e.getCode() == KeyCode.SPACE) moveU.play();
+//            if (e.getCode() == KeyCode.SHIFT) moveD.play();
+//            if (e.getCode() == KeyCode.ESCAPE) {
+//                primaryStage.close();
+//            }
+//        });
+//
+//        scene.setOnKeyReleased(e -> {
+//            if (e.getCode() == KeyCode.W) moveF.stop();
+//            if (e.getCode() == KeyCode.D) moveR.stop();
+//            if (e.getCode() == KeyCode.S) moveB.stop();
+//            if (e.getCode() == KeyCode.A) moveL.stop();
+//            if (e.getCode() == KeyCode.SPACE) moveU.stop();
+//            if (e.getCode() == KeyCode.SHIFT) moveD.stop();
+//        });
+//    }
+//
+//    private void moveCamera(PerspectiveCamera camera, double deltaX, double deltaZ, double deltaY) {
+//        double yaw = Math.toRadians(cameraRotationAngleY);
+//
+//        // Calculate forward and right vectors based on yaw angle
+//        double forwardX = Math.sin(yaw);
+//        double forwardZ = Math.cos(yaw);
+//        double rightX = Math.cos(yaw);
+//        double rightZ = -Math.sin(yaw);
+//
+//        camera.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
+//        camera.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
+//        camera.setTranslateY(camera.getTranslateY() + deltaY);
+//    }
+//
+//    private double clamp(double value, double min, double max) {
+//        return Math.max(min, Math.min(max, value));
+//    }
 
     public static void main(String[] args) {
         launch(args);
