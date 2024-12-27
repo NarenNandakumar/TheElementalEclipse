@@ -43,7 +43,6 @@ public class App extends Application {
         camera.setTranslateZ(-500); // Position the camera
         camera.setTranslateX(100);
         camera.setFarClip(1000.0D);
-        camera.getTransforms().addAll(x, y);
         // Create a scene and add the group to it
         Scene scene = new Scene(root, 1200, 800, true); // Enable depth buffer with `true`
         scene.setFill(Color.GRAY); // Background color
