@@ -83,34 +83,22 @@ public class App extends Application {
         // Initial position of the cursor
         previousX = scene.getWidth() / 2;
         previousY = scene.getHeight() / 2;
-        robot.mouseMove((int) previousX, (int) previousY);
+//        robot.mouseMove((int) previousX, (int) previousY);
 
         scene.setOnMouseMoved(event -> {
-        	
-            double currentX = event.getSceneX();
-            double currentY = event.getSceneY();
+            double deltaX = event.getSceneX() - (scene.getWidth() / 2);
+            double deltaY = event.getSceneY() - (scene.getHeight() / 2);
 
-            double deltaX = currentX - previousX;
-            double deltaY = currentY - previousY;
+            cameraRotationAngleY += deltaX * sensitivity;
+            cameraRotationAngleX -= deltaY * sensitivity;
 
-            // Update rotation angles
-            cameraRotationAngleY += deltaX * sensitivity; // Horizontal rotation (yaw)
-            cameraRotationAngleX -= deltaY * sensitivity; // Vertical rotation (pitch)
-
-            // Clamp vertical rotation (pitch) to avoid flipping the camera
             cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
 
-            // Apply rotations to camera
             rotateY.setAngle(cameraRotationAngleY);
             rotateX.setAngle(cameraRotationAngleX);
 
-            // Move the mouse cursor back to the center of the screen
-            robot.mouseMove((int) previousX, (int) previousY);
-            previousX = (int) previousX;
-            previousY = (int) previousY;
-            
-        	
-        	
+            // Re-center the cursor
+            robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
         });
         scene.setOnMouseClicked(e -> {
         	var r = e.getPickResult().getIntersectedNode();
