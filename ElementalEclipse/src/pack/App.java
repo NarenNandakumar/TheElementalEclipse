@@ -88,7 +88,8 @@ public class App extends Application {
         scene.setOnMouseMoved(event -> {
             double deltaX = event.getSceneX() - (scene.getWidth() / 2);
             double deltaY = event.getSceneY() - (scene.getHeight() / 2);
-
+            System.out.println("Delta X: " + deltaX);
+            System.out.println("Delta Y: " + deltaY);
             cameraRotationAngleY += deltaX * sensitivity;
             cameraRotationAngleX -= deltaY * sensitivity;
 
