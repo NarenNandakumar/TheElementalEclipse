@@ -1,6 +1,7 @@
 package pack;
 
 import javafx.animation.KeyFrame;
+import javafx.scene.image.Image;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -13,7 +14,14 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
@@ -58,17 +66,23 @@ public class App extends Application {
         camera.getTransforms().addAll(rotateY, rotateX);
         camera.setFieldOfView(45);
         camera.setTranslateY(-75);
-        
-        
+        b.setTexture("file:/C:/Users/shunm/Force.png");
+        StackPane rootroot = new StackPane();
+        Image background = new Image("file:/C:/Users/shunm/Force.png");
+        BackgroundImage backgroundImage = new BackgroundImage(background,
+                BackgroundRepeat.NO_REPEAT, // No repeating of the image
+                BackgroundRepeat.NO_REPEAT, // No repeating of the image
+                BackgroundPosition.CENTER, // Center the image in the region
+                BackgroundSize.DEFAULT);   // Use the default size for the image
         // Root group
-
+        rootroot.setBackground(new Background(backgroundImage));
         // Set up the scene
         
         scene.setFill(Color.CYAN);
         scene.setCamera(camera);
         
 //        b.setTranslateY(100);
-        
+        root.getChildren().add(rootroot);
         
 //        root.getChildren().add(b.box);
         primaryStage.setTitle("3D Camera Control");
@@ -78,7 +92,7 @@ public class App extends Application {
         AmbientLight light = new AmbientLight(Color.WHITE);
 //        root.getChildren().add(light);
         setupMovement(scene, camera, primaryStage);
-
+        
 //        scene.setCursor(Cursor.NONE);
 
         // Initial position of the cursor
@@ -94,8 +108,8 @@ public class App extends Application {
 //        	sup = false;
             double deltaX = event.getScreenX() - (scene.getWidth() / 2);
             double deltaY = event.getScreenY() - (scene.getHeight() / 2);
-            System.out.println("event x: " + event.getScreenX());
-            System.out.println("event y: " + event.getScreenY());
+//            System.out.println("event x: " + event.getScreenX());
+//            System.out.println("event y: " + event.getScreenY());
             cameraRotationAngleY += deltaX * sensitivity;
             cameraRotationAngleX -= deltaY * sensitivity;
             
@@ -117,6 +131,7 @@ public class App extends Application {
         		if (r == fs.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() - 25);
+        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			blocks.add(temp.box);
         			}
         			else {
@@ -133,6 +148,7 @@ public class App extends Application {
         		else if (r == bs.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() + 25);
+        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			blocks.add(temp.box);
         			}
         			else {
@@ -149,6 +165,7 @@ public class App extends Application {
         		else if (r == ls.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()-25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
+        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			blocks.add(temp.box);
         			}
         			else {
@@ -165,6 +182,7 @@ public class App extends Application {
         		else if (r == rs.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()+25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
+        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			blocks.add(temp.box);
         			}
         			else {
@@ -181,6 +199,7 @@ public class App extends Application {
         		else if (r == us.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()-25, (float)fs.get(i).c.box.getTranslateZ());
+        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			blocks.add(temp.box);
         			}
         			else {
@@ -197,6 +216,7 @@ public class App extends Application {
         		else if (r == ds.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()+25, (float)fs.get(i).c.box.getTranslateZ());
+        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			blocks.add(temp.box);
         			}
         			else {
@@ -342,6 +362,7 @@ class Cube {
 	Rect u;
 	Rect d;
 	int opacity = 00;
+	PhongMaterial m;
 //	private void handleClick(MouseEvent e, String face, float newX, float newY, float newZ) {
 //	    if (e.getButton() == MouseButton.SECONDARY) {
 //	        Cube temp = new Cube(25, 25, 25, newX, newY, newZ);
@@ -362,6 +383,7 @@ class Cube {
 //	    }
 //	}
 	public Cube(float length, float width, float height, float x, float y, float z) {
+		m = new PhongMaterial();
 		box = new Box(length, width, height);
 		box.setTranslateX(x);
 		box.setTranslateY(y);
@@ -558,7 +580,11 @@ class Cube {
 //		    }
 //		});
 	}
-	
+	public void setTexture(String path) {
+		Image textureImage = new Image(path);
+		m.setDiffuseMap(textureImage);
+		this.box.setMaterial(m);
+	}
 }
 class Rect {
 	Rectangle r;
