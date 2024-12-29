@@ -44,7 +44,7 @@ public class App extends Application {
     static ArrayList<Rect> rs = new ArrayList<Rect>();
     static ArrayList<Rect> ls = new ArrayList<Rect>();
     static ArrayList<Box> blocks = new ArrayList<Box>();
-    boolean suppressMouseMove;
+   
     public App() throws AWTException {
         this.robot = new Robot(); // Create the robot for cursor control
     }
@@ -85,20 +85,13 @@ public class App extends Application {
         previousY = scene.getHeight() / 2;
 //        robot.mouseMove((int) previousX, (int) previousY);
 
-        suppressMouseMove = false;
-
         scene.setOnMouseMoved(event -> {
-            if (suppressMouseMove) {
-                suppressMouseMove = false;
-                return;
-            }
-
             double deltaX = event.getSceneX() - (scene.getWidth() / 2);
             double deltaY = event.getSceneY() - (scene.getHeight() / 2);
-
-            System.out.println("Delta X: " + deltaX);
-            System.out.println("Delta Y: " + deltaY);
-
+//            System.out.println("Delta X: " + deltaX);
+//            System.out.println("Delta Y: " + deltaY);
+            System.out.println("width: " + scene.getWidth());
+            System.out.println("height: " + scene.getHeight());
             cameraRotationAngleY += deltaX * sensitivity;
             cameraRotationAngleX -= deltaY * sensitivity;
 
@@ -108,8 +101,8 @@ public class App extends Application {
             rotateX.setAngle(cameraRotationAngleX);
 
             // Re-center the cursor
-            suppressMouseMove = true;
             robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+            
         });
         scene.setOnMouseClicked(e -> {
         	var r = e.getPickResult().getIntersectedNode();
