@@ -44,7 +44,7 @@ public class App extends Application {
     static ArrayList<Rect> rs = new ArrayList<Rect>();
     static ArrayList<Rect> ls = new ArrayList<Rect>();
     static ArrayList<Box> blocks = new ArrayList<Box>();
-   
+    boolean sup = true;
     public App() throws AWTException {
         this.robot = new Robot(); // Create the robot for cursor control
     }
@@ -84,8 +84,13 @@ public class App extends Application {
         previousX = scene.getWidth() / 2;
         previousY = scene.getHeight() / 2;
 //        robot.mouseMove((int) previousX, (int) previousY);
-
+        
         scene.setOnMouseMoved(event -> {
+        	if (!sup) {
+        		sup = true;
+        		return;
+        	}
+        	sup = false;
             double deltaX = event.getSceneX() - (scene.getWidth() / 2);
             double deltaY = event.getSceneY() - (scene.getHeight() / 2);
             System.out.println("Delta X: " + deltaX);
@@ -99,7 +104,7 @@ public class App extends Application {
             rotateX.setAngle(cameraRotationAngleX);
 
             // Re-center the cursor
-//            robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+            robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
             
         });
         scene.setOnMouseClicked(e -> {
