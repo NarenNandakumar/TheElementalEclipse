@@ -94,8 +94,8 @@ public class App extends Application {
 //        	sup = false;
             double deltaX = event.getSceneX() - (scene.getWidth() / 2);
             double deltaY = event.getSceneY() - (scene.getHeight() / 2);
-            System.out.println("Delta X: " + deltaX);
-            System.out.println("Delta Y: " + deltaY);
+            System.out.println("Delta X: " + event.getSceneX());
+            System.out.println("Delta Y: " + event.getSceneY());
             cameraRotationAngleY += deltaX * sensitivity;
             cameraRotationAngleX -= deltaY * sensitivity;
             
