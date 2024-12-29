@@ -92,10 +92,10 @@ public class App extends Application {
 //        		return;
 //        	}
 //        	sup = false;
-            double deltaX = event.getSceneX() - (scene.getWidth() / 2);
-            double deltaY = event.getSceneY() - (scene.getHeight() / 2);
-            System.out.println("event x: " + event.getSceneX());
-            System.out.println("event y: " + event.getSceneY());
+            double deltaX = event.getScreenX() - (scene.getWidth() / 2);
+            double deltaY = event.getScreenY() - (scene.getHeight() / 2);
+            System.out.println("event x: " + event.getScreenX());
+            System.out.println("event y: " + event.getScreenY());
             cameraRotationAngleY += deltaX * sensitivity;
             cameraRotationAngleX -= deltaY * sensitivity;
             
