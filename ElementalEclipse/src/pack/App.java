@@ -79,7 +79,7 @@ public class App extends Application {
 //        root.getChildren().add(light);
         setupMovement(scene, camera, primaryStage);
 
-        scene.setCursor(Cursor.NONE);
+//        scene.setCursor(Cursor.NONE);
 
         // Initial position of the cursor
         previousX = scene.getWidth() / 2;
@@ -105,7 +105,10 @@ public class App extends Application {
             rotateX.setAngle(cameraRotationAngleX);
 
             // Re-center the cursor
-            robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+//            robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+            Platform.runLater(() -> {
+                robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+            });
             
         });
         scene.setOnMouseClicked(e -> {
