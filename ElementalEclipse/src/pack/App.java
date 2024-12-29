@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class App extends Application {
-	Box hitbox = new Box(25, 62.5, 25);
+	Box hitbox = new Box(20, 40, 20);
 	Cube b = new Cube(25, 25, 25, 100, 0, 0);
     public static Group root = new Group();
     private double cameraRotationAngleX = 0;
@@ -278,7 +278,7 @@ public class App extends Application {
         double rightX = Math.cos(yaw);
         double rightZ = -Math.sin(yaw);
         hitbox.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
-        hitbox.setTranslateY(camera.getTranslateY() + deltaY);
+        hitbox.setTranslateY(camera.getTranslateY() + deltaY +10);
         hitbox.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
         boolean gotHit = false;
         for (Box block : blocks) {
@@ -292,10 +292,11 @@ public class App extends Application {
         	camera.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
         	camera.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
         	camera.setTranslateY(camera.getTranslateY() + deltaY);
+        	hitbox.setTranslateX(camera.getTranslateX());
+            hitbox.setTranslateY(camera.getTranslateY()+10);
+            hitbox.setTranslateZ(camera.getTranslateZ());
         }
-        hitbox.setTranslateX(camera.getTranslateX());
-        hitbox.setTranslateY(camera.getTranslateY());
-        hitbox.setTranslateZ(camera.getTranslateZ());
+        
         
 //        System.out.println(T(hitbox, b));
     }
