@@ -68,7 +68,7 @@ public class App extends Application {
         scene.setCamera(camera);
         
 //        b.setTranslateY(100);
-    
+        
         
 //        root.getChildren().add(b.box);
         primaryStage.setTitle("3D Camera Control");
@@ -99,7 +99,7 @@ public class App extends Application {
             cameraRotationAngleY += deltaX * sensitivity;
             cameraRotationAngleX -= deltaY * sensitivity;
             
-            cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
+//            cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
 
             rotateY.setAngle(cameraRotationAngleY);
             rotateX.setAngle(cameraRotationAngleX);
