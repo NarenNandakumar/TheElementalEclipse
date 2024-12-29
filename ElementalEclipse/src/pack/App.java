@@ -45,6 +45,7 @@ public class App extends Application {
     static ArrayList<Rect> ls = new ArrayList<Rect>();
     static ArrayList<Box> blocks = new ArrayList<Box>();
     boolean sup = true;
+    Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
     public App() throws AWTException {
         this.robot = new Robot(); // Create the robot for cursor control
     }
@@ -78,26 +79,26 @@ public class App extends Application {
 //        root.getChildren().add(light);
         setupMovement(scene, camera, primaryStage);
 
-//        scene.setCursor(Cursor.NONE);
+        scene.setCursor(Cursor.NONE);
 
         // Initial position of the cursor
         previousX = scene.getWidth() / 2;
         previousY = scene.getHeight() / 2;
-//        robot.mouseMove((int) previousX, (int) previousY);
+        robot.mouseMove((int) previousX, (int) previousY);
         
         scene.setOnMouseMoved(event -> {
-        	if (!sup) {
-        		sup = true;
-        		return;
-        	}
-        	sup = false;
+//        	if (!sup) {
+//        		sup = true;
+//        		return;
+//        	}
+//        	sup = false;
             double deltaX = event.getSceneX() - (scene.getWidth() / 2);
             double deltaY = event.getSceneY() - (scene.getHeight() / 2);
             System.out.println("Delta X: " + deltaX);
             System.out.println("Delta Y: " + deltaY);
             cameraRotationAngleY += deltaX * sensitivity;
             cameraRotationAngleX -= deltaY * sensitivity;
-
+            
             cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
 
             rotateY.setAngle(cameraRotationAngleY);
