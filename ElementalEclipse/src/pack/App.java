@@ -33,12 +33,17 @@ import javafx.scene.transform.Transform;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class App extends Application {
 	Box hitbox = new Box(20, 40, 20);
-	Cube b = new Cube(25, 25, 25, 100, 0, 0);
+//	Cube b = new Cube(25, 25, 25, 100, 0, 0);
     public static Group root = new Group();
     private static double cameraRotationAngleX = 0;
     private static double cameraRotationAngleY = 0;
@@ -58,36 +63,60 @@ public class App extends Application {
     static ArrayList<Cube> blocks = new ArrayList<Cube>();
     boolean sup = true;
     private static long lastTime = System.nanoTime();
+    static String gameStage = "Menu";
+    static String element = "wind";
+    static boolean devMode = true;
+    Map<Point3D, String> map = new HashMap<>();
     Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+    
     public App() throws AWTException {
         robot = new Robot(); // Create the robot for cursor control
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-    	blocks.add(b);
+//    	b.setTexture("file:Textures/god.png");
+//    	blocks.add(b);
         camera.setNearClip(1);
         camera.setFarClip(2000);
         camera.getTransforms().addAll(rotateY, rotateX);
         camera.setFieldOfView(45);
-        camera.setTranslateY(-75);
-//        b.setTexture("file:/C:/Users/shunm/Force.png");
-        StackPane rootroot = new StackPane();
-        Image background = new Image("file:/C:/Users/shunm/Force.png");
-        BackgroundImage backgroundImage = new BackgroundImage(background,
-                BackgroundRepeat.NO_REPEAT, // No repeating of the image
-                BackgroundRepeat.NO_REPEAT, // No repeating of the image
-                BackgroundPosition.CENTER, // Center the image in the region
-                BackgroundSize.DEFAULT);   // Use the default size for the image
-        // Root group
-        rootroot.setBackground(new Background(backgroundImage));
-        // Set up the scene
+        camera.setTranslateY(-200);
+        try (BufferedReader br = new BufferedReader(new FileReader("Maps/wind.csv"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                if (values.length == 4) {  // Ensure there are exactly 4 values in the line
+                    // Convert the first three values to integers (or a composite key)
+//                    String key = values[0] + "-" + values[1] + "-" + values[2]; // Create a unique key from the first three integers
+                    Point3D k = new Point3D(Integer.parseInt(values[0]), Integer.parseInt(values[1]), Integer.parseInt(values[2]));
+                    String word = values[3]; // The last value is the word
+
+                    // Store in the dictionary
+                    map.put(k, word);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (element.equals("wind")) {
+        	 for (Map.Entry<Point3D, String> entry : map.entrySet()) {
+             	Point3D p = entry.getKey();
+             	String t = entry.getValue();
+                 Cube temp = new Cube(25F, 25F, 25F, (float)(p.getX()*25), (float)(p.getY()*25), (float)(p.getZ()*25));
+                 if (t.equals("scooby")) {
+                 	temp.setTexture("file:Textures/god.png");
+                 }
+                 blocks.add(temp);
+             }
+        }
+       
         
         scene.setFill(Color.CYAN);
         scene.setCamera(camera);
         
 //        b.setTranslateY(100);
-        root.getChildren().add(rootroot);
+//        root.getChildren().add(rootroot);
         
 //        root.getChildren().add(b.box);
         primaryStage.setTitle("3D Camera Control");
@@ -274,6 +303,10 @@ public class App extends Application {
 ////            	System.out.println(b.box.computeAreaInScreen());
 //        	}
         });
+        
+        
+        // Game main menu Code (VERY IMPORTANT):
+        
     }
     public static void handleMovement(MouseEvent event) {
     	double deltaX = event.getScreenX() - (scene.getWidth() / 2);
@@ -655,10 +688,15 @@ class Cube {
 //		});
 	}
 	public void setTexture(String path) {
-		Image textureImage = new Image(path);
-		m.setDiffuseMap(textureImage);
-		this.box.setMaterial(m);
-	}
+        // Load the image as a resource from the classpath
+        Image textureImage = new Image(path);
+        if (textureImage.isError()) {
+            System.err.println("Error loading texture: " + textureImage.getException());
+            return;
+        }
+        m.setDiffuseMap(textureImage);
+        this.box.setMaterial(m);
+    }
 	public boolean isInFrustum() {
 		Box object = box;
 	    // Get object's position in world coordinates
