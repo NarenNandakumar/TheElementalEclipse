@@ -6,11 +6,15 @@ import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.geometry.Point2D;
+import javafx.geometry.Point3D;
 import javafx.scene.AmbientLight;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
+import javafx.scene.effect.Bloom;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -36,14 +40,14 @@ public class App extends Application {
 	Box hitbox = new Box(20, 40, 20);
 	Cube b = new Cube(25, 25, 25, 100, 0, 0);
     public static Group root = new Group();
-    private double cameraRotationAngleX = 0;
-    private double cameraRotationAngleY = 0;
+    private static double cameraRotationAngleX = 0;
+    private static double cameraRotationAngleY = 0;
     private double previousX, previousY;
-    private final double sensitivity = 0.1;
-    private final Robot robot;
-    private final PerspectiveCamera camera = new PerspectiveCamera(true);
-    private final Rotate rotateX = new Rotate(0, Rotate.X_AXIS);
-    private final Rotate rotateY = new Rotate(0, Rotate.Y_AXIS);
+    private final static double sensitivity = 0.1;
+    private static Robot robot;
+    public final static PerspectiveCamera camera = new PerspectiveCamera(true);
+    private final static Rotate rotateX = new Rotate(0, Rotate.X_AXIS);
+    private final static Rotate rotateY = new Rotate(0, Rotate.Y_AXIS);
     static Scene scene = new Scene(root, 800, 600, true);
     static ArrayList<Rect> fs = new ArrayList<Rect>();
     static ArrayList<Rect> bs = new ArrayList<Rect>();
@@ -51,22 +55,23 @@ public class App extends Application {
     static ArrayList<Rect> ds = new ArrayList<Rect>();
     static ArrayList<Rect> rs = new ArrayList<Rect>();
     static ArrayList<Rect> ls = new ArrayList<Rect>();
-    static ArrayList<Box> blocks = new ArrayList<Box>();
+    static ArrayList<Cube> blocks = new ArrayList<Cube>();
     boolean sup = true;
+    private static long lastTime = System.nanoTime();
     Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
     public App() throws AWTException {
-        this.robot = new Robot(); // Create the robot for cursor control
+        robot = new Robot(); // Create the robot for cursor control
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-    	blocks.add(b.box);
+    	blocks.add(b);
         camera.setNearClip(1);
         camera.setFarClip(2000);
         camera.getTransforms().addAll(rotateY, rotateX);
         camera.setFieldOfView(45);
         camera.setTranslateY(-75);
-        b.setTexture("file:/C:/Users/shunm/Force.png");
+//        b.setTexture("file:/C:/Users/shunm/Force.png");
         StackPane rootroot = new StackPane();
         Image background = new Image("file:/C:/Users/shunm/Force.png");
         BackgroundImage backgroundImage = new BackgroundImage(background,
@@ -99,43 +104,67 @@ public class App extends Application {
         previousX = scene.getWidth() / 2;
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
+        Timeline gen = new Timeline(new KeyFrame(Duration.millis(100), e -> {
+//        	int hiddenBlocks = 0;
+        	for (Cube block : blocks) {
+        		if (block.box.computeAreaInScreen() == 0) {
+//        			System.out.println(1);
+        			block.box.setVisible(false);
+//        			hiddenBlocks++;
+        		}
+        		else {
+        			block.box.setVisible(true);
+        		}
+//            	System.out.println(b.box.getBoundsInParent().getHeight());
+//            	System.out.println(b.box.computeAreaInScreen());
+        	}
+//        	System.out.println(hiddenBlocks);
+        }));
         
+        gen.setCycleCount(Timeline.INDEFINITE);
+        gen.play();
+        
+
         scene.setOnMouseMoved(event -> {
-//        	if (!sup) {
-//        		sup = true;
-//        		return;
-//        	}
-//        	sup = false;
-            double deltaX = event.getScreenX() - (scene.getWidth() / 2);
-            double deltaY = event.getScreenY() - (scene.getHeight() / 2);
-//            System.out.println("event x: " + event.getScreenX());
-//            System.out.println("event y: " + event.getScreenY());
-            cameraRotationAngleY += deltaX * sensitivity;
-            cameraRotationAngleX -= deltaY * sensitivity;
-            
-//            cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
+            // Calculate the time difference in milliseconds
+            long currentTime = System.nanoTime();
+            long deltaTime = (currentTime - lastTime) / 1000000; // Convert to ms
 
-            rotateY.setAngle(cameraRotationAngleY);
-            rotateX.setAngle(cameraRotationAngleX);
+            // Only update if 10ms have passed
+            if (deltaTime >= 10) {
+                double deltaX = event.getScreenX() - (scene.getWidth() / 2);
+                double deltaY = event.getScreenY() - (scene.getHeight() / 2);
 
-            // Re-center the cursor
-//            robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
-            Platform.runLater(() -> {
-                robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
-            });
-            
+                cameraRotationAngleY += deltaX * sensitivity;
+                cameraRotationAngleX -= deltaY * sensitivity;
+
+                rotateY.setAngle(cameraRotationAngleY);
+                rotateX.setAngle(cameraRotationAngleX);
+
+                // Re-center the cursor
+                Platform.runLater(() -> {
+                    robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+                });
+
+                // Update lastTime to current time
+                lastTime = currentTime;
+            }
         });
         scene.setOnMouseClicked(e -> {
+        	
         	var r = e.getPickResult().getIntersectedNode();
+        	e.getPickResult().getIntersectedFace();
+        	
+        	
         	for (int i = 0; i < fs.size(); i++) {
         		if (r == fs.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() - 25);
-        			temp.setTexture("file:/C:/Users/shunm/Force.png");
-        			blocks.add(temp.box);
+//        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			blocks.add(temp);
         			}
         			else {
-        				blocks.remove(fs.get(i).c.box);
+        				blocks.remove(fs.get(i).c);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -148,11 +177,11 @@ public class App extends Application {
         		else if (r == bs.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() + 25);
-        			temp.setTexture("file:/C:/Users/shunm/Force.png");
-        			blocks.add(temp.box);
+//        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			blocks.add(temp);
         			}
         			else {
-        				blocks.remove(fs.get(i).c.box);
+        				blocks.remove(fs.get(i).c);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -165,11 +194,11 @@ public class App extends Application {
         		else if (r == ls.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()-25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
-        			temp.setTexture("file:/C:/Users/shunm/Force.png");
-        			blocks.add(temp.box);
+//        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			blocks.add(temp);
         			}
         			else {
-        				blocks.remove(fs.get(i).c.box);
+        				blocks.remove(fs.get(i).c);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -182,11 +211,11 @@ public class App extends Application {
         		else if (r == rs.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()+25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
-        			temp.setTexture("file:/C:/Users/shunm/Force.png");
-        			blocks.add(temp.box);
+//        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			blocks.add(temp);
         			}
         			else {
-        				blocks.remove(fs.get(i).c.box);
+        				blocks.remove(fs.get(i).c);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -199,11 +228,11 @@ public class App extends Application {
         		else if (r == us.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()-25, (float)fs.get(i).c.box.getTranslateZ());
-        			temp.setTexture("file:/C:/Users/shunm/Force.png");
-        			blocks.add(temp.box);
+//        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			blocks.add(temp);
         			}
         			else {
-        				blocks.remove(fs.get(i).c.box);
+        				blocks.remove(fs.get(i).c);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -216,11 +245,11 @@ public class App extends Application {
         		else if (r == ds.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()+25, (float)fs.get(i).c.box.getTranslateZ());
-        			temp.setTexture("file:/C:/Users/shunm/Force.png");
-        			blocks.add(temp.box);
+//        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			blocks.add(temp);
         			}
         			else {
-        				blocks.remove(fs.get(i).c.box);
+        				blocks.remove(fs.get(i).c);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -230,10 +259,41 @@ public class App extends Application {
         	            App.root.getChildren().remove(fs.get(i).c.d.r);
         			}
         		}
+        		
         	}
+//        	for (Cube block : blocks) {
+//        		if (block.box.computeAreaInScreen() == 0) {
+////        			System.out.println(1);
+//        			
+//        			block.box.setVisible(false);
+//        		}
+//        		else {
+//        			block.box.setVisible(true);
+//        		}
+////            	System.out.println(b.box.getBoundsInParent().getHeight());
+////            	System.out.println(b.box.computeAreaInScreen());
+//        	}
         });
     }
+    public static void handleMovement(MouseEvent event) {
+    	double deltaX = event.getScreenX() - (scene.getWidth() / 2);
+        double deltaY = event.getScreenY() - (scene.getHeight() / 2);
+//        System.out.println("event x: " + event.getScreenX());
+//        System.out.println("event y: " + event.getScreenY());
+        cameraRotationAngleY += deltaX * sensitivity;
+        cameraRotationAngleX -= deltaY * sensitivity;
+        
+//        cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
 
+        rotateY.setAngle(cameraRotationAngleY);
+        rotateX.setAngle(cameraRotationAngleX);
+
+        // Re-center the cursor
+//        robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+        Platform.runLater(() -> {
+            robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+        });
+    }
     private void setupMovement(Scene scene, PerspectiveCamera camera, Stage primaryStage) {
         Timeline moveF = new Timeline(new KeyFrame(Duration.millis(10), e -> {
             moveCamera(camera, 0, 2, 0);
@@ -289,6 +349,17 @@ public class App extends Application {
     }
 
     private void moveCamera(PerspectiveCamera camera, double deltaX, double deltaZ, double deltaY) {
+//    	for (Cube block : blocks) {
+//    		if (block.box.computeAreaInScreen() == 0) {
+////    			System.out.println(1);
+//    			block.box.setVisible(false);
+//    		}
+//    		else {
+//    			block.box.setVisible(true);
+//    		}
+////        	System.out.println(b.box.getBoundsInParent().getHeight());
+////        	System.out.println(b.box.computeAreaInScreen());
+//    	}
         double yaw = Math.toRadians(cameraRotationAngleY);
         
         // Calculate forward and right vectors based on yaw angle
@@ -300,8 +371,8 @@ public class App extends Application {
         hitbox.setTranslateY(camera.getTranslateY() + deltaY +10);
         hitbox.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
         boolean gotHit = false;
-        for (Box block : blocks) {
-        	if (T(hitbox, block)) {
+        for (Cube block : blocks) {
+        	if (T(hitbox, block.box)) {
             	gotHit = true;
                 break;
             }
@@ -388,6 +459,8 @@ class Cube {
 		box.setTranslateX(x);
 		box.setTranslateY(y);
 		box.setTranslateZ(z);
+//		box.setEffect(new GaussianBlur(5));
+		
 		App.root.getChildren().add(box);
 		f = new Rect(25, 25, this);
 		f.setTranslateX(x-12.5);
@@ -457,6 +530,7 @@ class Cube {
 		d.setOpacity(opacity);
 		App.root.getChildren().add(d.r);
 		App.ds.add(d);
+		
 		//
 //		App.scene.setOnMouseClicked(e -> {
 //			
@@ -585,6 +659,48 @@ class Cube {
 		m.setDiffuseMap(textureImage);
 		this.box.setMaterial(m);
 	}
+	public boolean isInFrustum() {
+		Box object = box;
+	    // Get object's position in world coordinates
+	    double objectWorldX = object.getTranslateX();
+	    double objectWorldY = object.getTranslateY();
+	    double objectWorldZ = object.getTranslateZ();
+
+	    // Transform to camera space
+	    double cameraWorldX = App.camera.getTranslateX();
+	    double cameraWorldY = App.camera.getTranslateY();
+	    double cameraWorldZ = App.camera.getTranslateZ();
+
+	    // Relative position in camera space
+	    double cameraX = objectWorldX - cameraWorldX;
+	    double cameraY = objectWorldY - cameraWorldY;
+	    double cameraZ = objectWorldZ - cameraWorldZ;
+
+	    // Near and far clip checks (JavaFX uses negative Z for depth into the screen)
+	    double nearClip = App.camera.getNearClip();
+	    double farClip = App.camera.getFarClip();
+	    if (cameraZ > -nearClip || cameraZ < -farClip) {
+	        return false;
+	    }
+
+	    // Calculate aspect ratio of the scene
+	    double aspectRatio = App.scene.getWidth() / App.scene.getHeight();
+
+	    // Horizontal and vertical FOV calculations
+	    double horizontalFOV = Math.toRadians(App.camera.getFieldOfView());
+	    double verticalFOV = 2 * Math.atan(Math.tan(horizontalFOV / 2) / aspectRatio);
+
+	    // Frustum extents at the object's depth
+	    double halfWidthAtZ = -cameraZ * Math.tan(horizontalFOV / 2);
+	    double halfHeightAtZ = -cameraZ * Math.tan(verticalFOV / 2);
+
+	    // Check if the object is within the frustum bounds
+	    return (cameraX >= -halfWidthAtZ && cameraX <= halfWidthAtZ &&
+	            cameraY >= -halfHeightAtZ && cameraY <= halfHeightAtZ);
+	}
+
+
+
 }
 class Rect {
 	Rectangle r;
