@@ -10,9 +10,12 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Point3D;
 import javafx.scene.AmbientLight;
 import javafx.scene.Cursor;
+import javafx.scene.DepthTest;
 import javafx.scene.Group;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
+import javafx.scene.SceneAntialiasing;
+import javafx.scene.SubScene;
 import javafx.scene.effect.Bloom;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.KeyCode;
@@ -28,8 +31,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.NonInvertibleTransformException;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.awt.*;
@@ -50,16 +55,25 @@ public class App extends Application {
     private double previousX, previousY;
     private final static double sensitivity = 0.1;
     private static Robot robot;
-    public final static PerspectiveCamera camera = new PerspectiveCamera(true);
-    private final static Rotate rotateX = new Rotate(0, Rotate.X_AXIS);
-    private final static Rotate rotateY = new Rotate(0, Rotate.Y_AXIS);
+    public static PerspectiveCamera camera = new PerspectiveCamera(true);
+    static Rotate rotateX = new Rotate(0, Rotate.X_AXIS);
+    static Rotate rotateY = new Rotate(0, Rotate.Y_AXIS);
     static Scene scene = new Scene(root, 800, 600, true);
+//    static Scene d2 = new Scene(root, 800, 600, true);
     static ArrayList<Rect> fs = new ArrayList<Rect>();
     static ArrayList<Rect> bs = new ArrayList<Rect>();
     static ArrayList<Rect> us = new ArrayList<Rect>();
     static ArrayList<Rect> ds = new ArrayList<Rect>();
     static ArrayList<Rect> rs = new ArrayList<Rect>();
     static ArrayList<Rect> ls = new ArrayList<Rect>();
+    static double cameraX = 0;;
+    static double cameraY = -200;
+    static double cameraZ = 0;
+    static double cameraFOV = 45;
+    static double cameraRX = 0;
+    static double cameraRY = 0;
+    static double screenX = scene.getWidth();
+    static double screenY = scene.getHeight();
     static ArrayList<Cube> blocks = new ArrayList<Cube>();
     boolean sup = true;
     private static long lastTime = System.nanoTime();
@@ -67,7 +81,7 @@ public class App extends Application {
     static String element = "wind";
     static boolean devMode = true;
     Map<Point3D, String> map = new HashMap<>();
-    Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+//    Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
     
     public App() throws AWTException {
         robot = new Robot(); // Create the robot for cursor control
@@ -75,10 +89,11 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+    	
 //    	b.setTexture("file:Textures/god.png");
 //    	blocks.add(b);
         camera.setNearClip(1);
-        camera.setFarClip(2000);
+        camera.setFarClip(20000);
         camera.getTransforms().addAll(rotateY, rotateX);
         camera.setFieldOfView(45);
         camera.setTranslateY(-200);
@@ -100,21 +115,22 @@ public class App extends Application {
             e.printStackTrace();
         }
         if (element.equals("wind")) {
-        	 for (Map.Entry<Point3D, String> entry : map.entrySet()) {
-             	Point3D p = entry.getKey();
-             	String t = entry.getValue();
-                 Cube temp = new Cube(25F, 25F, 25F, (float)(p.getX()*25), (float)(p.getY()*25), (float)(p.getZ()*25));
-                 if (t.equals("scooby")) {
-                 	temp.setTexture("file:Textures/god.png");
-                 }
-                 blocks.add(temp);
-             }
-        }
+          	 for (Map.Entry<Point3D, String> entry : map.entrySet()) {
+               	Point3D p = entry.getKey();
+               	String t = entry.getValue();
+                   Cube temp = new Cube(25F, 25F, 25F, (float)(p.getX()*25), (float)(p.getY()*25), (float)(p.getZ()*25));
+                   if (t.equals("scooby")) {
+                   	temp.setTexture("file:Textures/god.png");
+                   }
+                   blocks.add(temp);
+               }
+          }
+        
        
         
         scene.setFill(Color.CYAN);
         scene.setCamera(camera);
-        
+        StackPane s = new StackPane();
 //        b.setTranslateY(100);
 //        root.getChildren().add(rootroot);
         
@@ -124,8 +140,14 @@ public class App extends Application {
         primaryStage.setFullScreen(true);
         primaryStage.show();
         AmbientLight light = new AmbientLight(Color.WHITE);
-//        root.getChildren().add(light);
+        root.getChildren().add(light);
         setupMovement(scene, camera, primaryStage);
+        screenX = primaryStage.getWidth();
+        screenY = primaryStage.getHeight();
+        FlatRect tt = new FlatRect(0.1, 0.1, 100, 100);
+        
+        
+        
         
 //        scene.setCursor(Cursor.NONE);
 
@@ -166,10 +188,20 @@ public class App extends Application {
 
                 cameraRotationAngleY += deltaX * sensitivity;
                 cameraRotationAngleX -= deltaY * sensitivity;
-
+                cameraRY = cameraRotationAngleX;
+                cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
+                cameraRX = cameraRotationAngleY;
                 rotateY.setAngle(cameraRotationAngleY);
                 rotateX.setAngle(cameraRotationAngleX);
-
+//                for (FlatRect aa : FlatRect.menuList) {
+//                	Group g = new Group(camera, aa.r);
+////                	Rotate rotateY = new Rotate(0, camera.getTranslateX(), camera.getTranslateY(), camera.getTranslateZ(), Rotate.Y_AXIS);
+////                	Rotate rotateX = new Rotate(0, camera.getTranslateX(), camera.getTranslateY(), camera.getTranslateZ(), Rotate.X_AXIS);
+////                	rotateX.setAngle(cameraRotationAngleX);
+////                	rotateY.setAngle(cameraRotationAngleY);
+//                    g.getTransforms().addAll(rotateY, rotateX);
+//                    
+//                }
                 // Re-center the cursor
                 Platform.runLater(() -> {
                     robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
@@ -308,53 +340,53 @@ public class App extends Application {
         // Game main menu Code (VERY IMPORTANT):
         
     }
-    public static void handleMovement(MouseEvent event) {
-    	double deltaX = event.getScreenX() - (scene.getWidth() / 2);
-        double deltaY = event.getScreenY() - (scene.getHeight() / 2);
-//        System.out.println("event x: " + event.getScreenX());
-//        System.out.println("event y: " + event.getScreenY());
-        cameraRotationAngleY += deltaX * sensitivity;
-        cameraRotationAngleX -= deltaY * sensitivity;
-        
-//        cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
-
-        rotateY.setAngle(cameraRotationAngleY);
-        rotateX.setAngle(cameraRotationAngleX);
-
-        // Re-center the cursor
-//        robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
-        Platform.runLater(() -> {
-            robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
-        });
-    }
+//    public static void handleMovement(MouseEvent event) {
+//    	double deltaX = event.getScreenX() - (scene.getWidth() / 2);
+//        double deltaY = event.getScreenY() - (scene.getHeight() / 2);
+////        System.out.println("event x: " + event.getScreenX());
+////        System.out.println("event y: " + event.getScreenY());
+//        cameraRotationAngleY += deltaX * sensitivity;
+//        cameraRotationAngleX -= deltaY * sensitivity;
+//        
+////        cameraRotationAngleX = clamp(cameraRotationAngleX, -90, 90);
+//
+//        rotateY.setAngle(cameraRotationAngleY);
+//        rotateX.setAngle(cameraRotationAngleX);
+//
+//        // Re-center the cursor
+////        robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+//        Platform.runLater(() -> {
+//            robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+//        });
+//    }
     private void setupMovement(Scene scene, PerspectiveCamera camera, Stage primaryStage) {
-        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 0, 2, 0);
+        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+            moveCamera(camera, 0, .2, 0);
         }));
         moveF.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 2, 0, 0);
+        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+            moveCamera(camera, .2, 0, 0);
         }));
         moveR.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 0, -2, 0);
+        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+            moveCamera(camera, 0, -.2, 0);
         }));
         moveB.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, -2, 0, 0);
+        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+            moveCamera(camera, -.2, 0, 0);
         }));
         moveL.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 0, 0, -2);
+        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+            moveCamera(camera, 0, 0, -.2);
         }));
         moveU.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-            moveCamera(camera, 0, 0, 2);
+        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+            moveCamera(camera, 0, 0, .2);
         }));
         moveD.setCycleCount(Timeline.INDEFINITE);
         
@@ -419,7 +451,9 @@ public class App extends Application {
             hitbox.setTranslateY(camera.getTranslateY()+10);
             hitbox.setTranslateZ(camera.getTranslateZ());
         }
-        
+        cameraX = camera.getTranslateX();
+        cameraY = camera.getTranslateY();
+        cameraZ = camera.getTranslateZ();
         
 //        System.out.println(T(hitbox, b));
     }
@@ -762,4 +796,51 @@ class Rect {
 	public void setOpacity(int o) {
 		r.setOpacity(o);
 	}
+}
+class FlatRect {
+	static double ratio = App.screenX/App.screenY;
+	static double vfov =  App.cameraFOV;
+	static double radian = vfov * (Math.PI/180);
+	static double hfov = 2*(Math.atan(Math.tan(radian/2) * ratio));
+	static double z = 1000;
+	static double screenWidth = Math.abs(2 * (z * Math.tan(hfov/2)));
+	static double screenHeight = Math.abs(2 * (z * Math.tan(radian/2)));
+	static Rotate tempX = App.rotateX;
+	static Rotate tempY = App.rotateY;
+	Rectangle r;
+	static ArrayList<FlatRect> menuList = new ArrayList<FlatRect>();
+	public FlatRect(double x, double y, double xp, double yp) throws NonInvertibleTransformException {
+//		Transform inv = App.camera.getLocalToSceneTransform().createInverse();
+		// Create a rectangle
+		r = new Rectangle(x * screenWidth, y * screenWidth);
+		r.setTranslateZ(1000);
+		r.setDepthTest(DepthTest.DISABLE);
+		App.root.getChildren().add(r);
+//		r.getTransforms().add(inv)
+		Rotate xt = new Rotate(0, Rotate.Y_AXIS);
+		Rotate yt = new Rotate(0, Rotate.X_AXIS);
+		r.getTransforms().addAll(xt, yt);
+		Timeline timer = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+//			r.setTranslateX((xp * screenWidth) + App.cameraX);
+//			r.setTranslateY((yp * screenHeight) + App.cameraY);
+//			r.setTranslateZ(z + App.cameraZ);
+//			xt.setPivotX(App.cameraX);
+//			xt.setPivotY(App.cameraY);
+//			xt.setPivotZ(App.cameraZ);
+//			yt.setPivotX(App.cameraX);
+//			yt.setPivotY(App.cameraY);
+//			yt.setPivotZ(App.cameraZ);
+			xt.setAngle(App.cameraRX);
+			yt.setAngle(App.cameraRY);
+			Transform local = App.camera.getLocalToSceneTransform();
+			Point3D newlocal = local.transform(new Point3D(xp, yp, z));
+			r.setTranslateX(newlocal.getX());
+			r.setTranslateY(newlocal.getY());
+			r.setTranslateZ(newlocal.getZ());
+			
+		}));
+		timer.setCycleCount(Timeline.INDEFINITE);
+		timer.play();
+	}
+			
 }

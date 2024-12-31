@@ -11,6 +11,7 @@ module ElementalEclipse {
     requires java.scripting;
 	requires java.desktop;
 	requires javafx.graphics;
+	
     exports pack;
 //    exports ElementalEclipse
 }
