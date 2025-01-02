@@ -266,7 +266,7 @@ public class App extends Application {
         	}
 //        	System.out.println(-(int)Math.round(hitbox.getTranslateY()/25 - 1));
         	playerX = (int)Math.round(hitbox.getTranslateX()/25);
-        	playerY = (-(int)Math.round(hitbox.getTranslateY()/25 - 1));
+        	playerY = (-(int)Math.floor(hitbox.getTranslateY() + 50)/25) + 1;
         	playerZ = (int)Math.round(hitbox.getTranslateZ()/25);
         	System.out.println("x: " + playerX + " y: " + playerY + " z: " + playerZ);
         }));
