@@ -150,8 +150,8 @@ public class App extends Application {
         primaryStage.setScene(scene);
         primaryStage.setFullScreen(true);
         primaryStage.show();
-//        AmbientLight light = new AmbientLight(Color.WHITE);
-//        root.getChildren().add(light);
+        AmbientLight light = new AmbientLight(Color.WHITE);
+        root.getChildren().add(light);
         setupMovement(scene, camera, primaryStage);
         screenX = primaryStage.getWidth();
         screenY = primaryStage.getHeight();
