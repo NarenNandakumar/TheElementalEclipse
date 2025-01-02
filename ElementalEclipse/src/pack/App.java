@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class App extends Application {
 	Box hitbox = new Box(15, 50, 15);
@@ -68,7 +69,7 @@ public class App extends Application {
     static ArrayList<Rect> rs = new ArrayList<Rect>();
     static ArrayList<Rect> ls = new ArrayList<Rect>();
     static double cameraX = 0;;
-    static double cameraY = -225;
+    static double cameraY = 0;
     static double cameraZ = 0;
     static double cameraFOV = 45;
     static double cameraRX = 0;
@@ -81,7 +82,8 @@ public class App extends Application {
     static String gameStage = "Menu";
     static String element = "wind";
     static boolean devMode = true;
-    Map<Point3D, String> map = new HashMap<>();
+    Map<Point3DKey, String> map = new HashMap<>();
+    
     static ArrayList<FlatRect> slots = new ArrayList<FlatRect>();
     static int selectedSlot = 0;
     static String selectedBlock = "";
@@ -94,22 +96,33 @@ public class App extends Application {
     static int playerX;
     static int playerY;
     static int playerZ;
+    static int spawnX;
+    static int spawnY;
+    static int spawnZ;
+    static boolean onEdge = false;
 //    Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
     
     public App() throws AWTException {
         robot = new Robot(); // Create the robot for cursor control
     }
-
+    public void setSpawn(int x, int y, int z) {
+    	spawnX = x;
+    	spawnY = y;
+    	spawnZ = z;
+    	 camera.setNearClip(1);
+         camera.setFarClip(20000);
+         camera.getTransforms().addAll(rotateY, rotateX);
+         camera.setFieldOfView(45);
+         camera.setTranslateY(-spawnY * 25);
+         camera.setTranslateX(spawnX * 25);
+         camera.setTranslateZ(spawnZ * 25);
+    }
     @Override
     public void start(Stage primaryStage) throws Exception {
-    	
+    	setSpawn(0, 8, 0);
 //    	b.setTexture("file:Textures/god.png");
 //    	blocks.add(b);
-        camera.setNearClip(1);
-        camera.setFarClip(20000);
-        camera.getTransforms().addAll(rotateY, rotateX);
-        camera.setFieldOfView(45);
-        camera.setTranslateY(-225);
+       
         try (BufferedReader br = new BufferedReader(new FileReader("Maps/wind.csv"))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -117,7 +130,7 @@ public class App extends Application {
                 if (values.length == 4) {  // Ensure there are exactly 4 values in the line
                     // Convert the first three values to integers (or a composite key)
 //                    String key = values[0] + "-" + values[1] + "-" + values[2]; // Create a unique key from the first three integers
-                    Point3D k = new Point3D(Integer.parseInt(values[0]), Integer.parseInt(values[1]), Integer.parseInt(values[2]));
+                    Point3DKey k = new Point3DKey(Integer.parseInt(values[0]), Integer.parseInt(values[1]), Integer.parseInt(values[2]));
                     String word = values[3]; // The last value is the word
 
                     // Store in the dictionary
@@ -128,8 +141,8 @@ public class App extends Application {
             e.printStackTrace();
         }
         if (element.equals("wind")) {
-          	 for (Map.Entry<Point3D, String> entry : map.entrySet()) {
-               	Point3D p = entry.getKey();
+          	 for (Map.Entry<Point3DKey, String> entry : map.entrySet()) {
+               	Point3D p = entry.getKey().point;
                	String t = entry.getValue();
                    Cube temp = new Cube(25F, 25F, 25F, (float)(p.getX()*25), (float)(p.getY()*25), (float)(p.getZ()*25));
                    temp.setTexture(t);
@@ -268,7 +281,11 @@ public class App extends Application {
         	playerX = (int)Math.round(hitbox.getTranslateX()/25);
         	playerY = (-(int)Math.floor(hitbox.getTranslateY() + 50)/25) + 1;
         	playerZ = (int)Math.round(hitbox.getTranslateZ()/25);
-        	System.out.println("x: " + playerX + " y: " + playerY + " z: " + playerZ);
+        	
+        	cameraX = camera.getTranslateX();
+        	cameraY = camera.getTranslateY();
+        	cameraZ = camera.getTranslateZ();
+//        	System.out.println("x: " + playerX + " y: " + playerY + " z: " + playerZ);
         }));
         
         gen.setCycleCount(Timeline.INDEFINITE);
@@ -322,6 +339,9 @@ public class App extends Application {
         }
         scene.setOnMouseMoved(event -> {
             // Calculate the time difference in milliseconds
+//        	Point3DKey aaa = new Point3DKey(0,0,0);
+//        	Point3DKey bbb = new Point3DKey(0,0,0);
+//        	System.out.println(aaa == bbb);
             long currentTime = System.nanoTime();
             long deltaTime = (currentTime - lastTime) / 1000000; // Convert to ms
 
@@ -366,23 +386,28 @@ public class App extends Application {
         			if (e.getButton() == MouseButton.SECONDARY) { 
 	        			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() - 25);
 	//        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+	        			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
+	        			
 	        			if (T(temp.box, hitbox)) {
 	        				root.getChildren().remove(temp.box);
-	        				App.root.getChildren().remove(fs.get(i).c.box);
-	        	            App.root.getChildren().remove(fs.get(i).c.f.r);
-	        	            App.root.getChildren().remove(fs.get(i).c.b.r);
-	        	            App.root.getChildren().remove(fs.get(i).c.l.r);
-	        	            App.root.getChildren().remove(fs.get(i).c.r.r);
-	        	            App.root.getChildren().remove(fs.get(i).c.u.r);
-	        	            App.root.getChildren().remove(fs.get(i).c.d.r);
+	        	            App.root.getChildren().remove(temp.f.r);
+	        	            App.root.getChildren().remove(temp.b.r);
+	        	            App.root.getChildren().remove(temp.l.r);
+	        	            App.root.getChildren().remove(temp.r.r);
+	        	            App.root.getChildren().remove(temp.u.r);
+	        	            App.root.getChildren().remove(temp.d.r);
 	        			}
 	        			else {
 	        				temp.setTexture(selectedBlock);
 	        				blocks.add(temp);
+	        				map.put(p, selectedBlock);
 	        			}
         			}
         			else {
         				blocks.remove(fs.get(i).c);
+        				Box cub = fs.get(i).c.box;
+        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -396,23 +421,28 @@ public class App extends Application {
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() + 25);
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
         			if (T(temp.box, hitbox)) {
         				root.getChildren().remove(temp.box);
-        				root.getChildren().remove(temp.f.r);
-        	            root.getChildren().remove(temp.b.r);
-        	            root.getChildren().remove(temp.r.r);
-        	            root.getChildren().remove(temp.l.r);
-        	            root.getChildren().remove(temp.u.r);
-        	            root.getChildren().remove(temp.d.r);
+        	            App.root.getChildren().remove(temp.f.r);
+        	            App.root.getChildren().remove(temp.b.r);
+        	            App.root.getChildren().remove(temp.l.r);
+        	            App.root.getChildren().remove(temp.r.r);
+        	            App.root.getChildren().remove(temp.u.r);
+        	            App.root.getChildren().remove(temp.d.r);
         			}
         			else {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
+        				map.put(p, selectedBlock);
         			}
         			
         			}
         			else {
         				blocks.remove(fs.get(i).c);
+        				Box cub = fs.get(i).c.box;
+        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -426,24 +456,29 @@ public class App extends Application {
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()-25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
         			if (T(temp.box, hitbox)) {
         				root.getChildren().remove(temp.box);
-        				root.getChildren().remove(temp.f.r);
-        	            root.getChildren().remove(temp.b.r);
-        	            root.getChildren().remove(temp.r.r);
-        	            root.getChildren().remove(temp.l.r);
-        	            root.getChildren().remove(temp.u.r);
-        	            root.getChildren().remove(temp.d.r);
+        	            App.root.getChildren().remove(temp.f.r);
+        	            App.root.getChildren().remove(temp.b.r);
+        	            App.root.getChildren().remove(temp.l.r);
+        	            App.root.getChildren().remove(temp.r.r);
+        	            App.root.getChildren().remove(temp.u.r);
+        	            App.root.getChildren().remove(temp.d.r);
         			}
         			else {
 //        				System.out.println("2");
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
+        				map.put(p, selectedBlock);
         			}
         			
         			}
         			else {
         				blocks.remove(fs.get(i).c);
+        				Box cub = fs.get(i).c.box;
+        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -457,23 +492,28 @@ public class App extends Application {
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()+25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
         			if (T(temp.box, hitbox)) {
         				root.getChildren().remove(temp.box);
-        				root.getChildren().remove(temp.f.r);
-        	            root.getChildren().remove(temp.b.r);
-        	            root.getChildren().remove(temp.r.r);
-        	            root.getChildren().remove(temp.l.r);
-        	            root.getChildren().remove(temp.u.r);
-        	            root.getChildren().remove(temp.d.r);
+        	            App.root.getChildren().remove(temp.f.r);
+        	            App.root.getChildren().remove(temp.b.r);
+        	            App.root.getChildren().remove(temp.l.r);
+        	            App.root.getChildren().remove(temp.r.r);
+        	            App.root.getChildren().remove(temp.u.r);
+        	            App.root.getChildren().remove(temp.d.r);
         			}
         			else {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
+        				map.put(p, selectedBlock);
         			}
         			
         			}
         			else {
         				blocks.remove(fs.get(i).c);
+        				Box cub = fs.get(i).c.box;
+        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -487,23 +527,29 @@ public class App extends Application {
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()-25, (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
         			if (T(temp.box, hitbox)) {
         				root.getChildren().remove(temp.box);
-        				root.getChildren().remove(temp.f.r);
-        	            root.getChildren().remove(temp.b.r);
-        	            root.getChildren().remove(temp.r.r);
-        	            root.getChildren().remove(temp.l.r);
-        	            root.getChildren().remove(temp.u.r);
-        	            root.getChildren().remove(temp.d.r);
+        	            App.root.getChildren().remove(temp.f.r);
+        	            App.root.getChildren().remove(temp.b.r);
+        	            App.root.getChildren().remove(temp.l.r);
+        	            App.root.getChildren().remove(temp.r.r);
+        	            App.root.getChildren().remove(temp.u.r);
+        	            App.root.getChildren().remove(temp.d.r);
         			}
         			else {
         				temp.setTexture(selectedBlock);
+        				
         				blocks.add(temp);
+        				map.put(p, selectedBlock);
         			}
         			
         			}
         			else {
         				blocks.remove(fs.get(i).c);
+        				Box cub = fs.get(i).c.box;
+        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -517,23 +563,28 @@ public class App extends Application {
         			if (e.getButton() == MouseButton.SECONDARY) { 
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()+25, (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
+        			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
         			if (T(temp.box, hitbox)) {
         				root.getChildren().remove(temp.box);
-        				root.getChildren().remove(temp.f.r);
-        	            root.getChildren().remove(temp.b.r);
-        	            root.getChildren().remove(temp.r.r);
-        	            root.getChildren().remove(temp.l.r);
-        	            root.getChildren().remove(temp.u.r);
-        	            root.getChildren().remove(temp.d.r);
+        	            App.root.getChildren().remove(temp.f.r);
+        	            App.root.getChildren().remove(temp.b.r);
+        	            App.root.getChildren().remove(temp.l.r);
+        	            App.root.getChildren().remove(temp.r.r);
+        	            App.root.getChildren().remove(temp.u.r);
+        	            App.root.getChildren().remove(temp.d.r);
         			}
         			else {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
+        				map.put(p, selectedBlock);
         			}
         			
         			}
         			else {
         				blocks.remove(fs.get(i).c);
+        				Box cub = fs.get(i).c.box;
+        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
         	            App.root.getChildren().remove(fs.get(i).c.b.r);
@@ -617,14 +668,14 @@ public class App extends Application {
             if (e.getCode() == KeyCode.A) moveL.play();
             if (e.getCode() == KeyCode.SPACE) {
             	if (playerVelocity == 0) {
-            		playerVelocity = -2;
+            		playerVelocity = -1.5;
             	}
             	
             }
             if (e.getCode() == KeyCode.R) { 
-            	camera.setTranslateY(-225);
-            	camera.setTranslateX(0);
-            	camera.setTranslateZ(0);
+            	camera.setTranslateY(-spawnY * 25);
+            	camera.setTranslateX(spawnX);
+            	camera.setTranslateZ(spawnZ);
             	scene.setFill(Color.DARKSLATEGRAY);
             	playerVelocity = 0;
             }
@@ -752,6 +803,7 @@ public class App extends Application {
         	hitbox.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
 	        hitbox.setTranslateY(camera.getTranslateY() + deltaY + 17.5);
 	        hitbox.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
+	        
         }
         boolean gotHit = false;
         
@@ -763,16 +815,49 @@ public class App extends Application {
             
         }
         if (!gotHit) {
-//        	if (!sneaking) {
-        	camera.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
-        	camera.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
-        	camera.setTranslateY(camera.getTranslateY() + deltaY);
+//        	
         	
+        	if (sneaking) {
+//        		if (map.containsKey(new Point3DKey(playerX, playerY-1, playerZ)) || onEdge) {
+        		if (playerVelocity == 0) {
+            		Point3D cest = new Point3D(playerX, playerY-1, playerZ);
+            		double nextX = Math.round(hitbox.getTranslateX()/25);
+            		double nextZ = Math.round(hitbox.getTranslateZ()/25);
+            		boolean onTop = false;
+            		for (Cube block: blocks) {
+            			hitbox.setTranslateY(hitbox.getTranslateY() + 10);
+            			if (T(block.box, hitbox)) {
+            				onTop = true;
+            				hitbox.setTranslateY(hitbox.getTranslateY() - 10);
+            				break;
+            			}
+            			hitbox.setTranslateY(hitbox.getTranslateY() - 10);
+            		}
+            		if (map.containsKey(new Point3DKey(nextX, playerY-1, nextZ)) || onTop) {
+            			
+            			camera.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
+            	        camera.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
+            	        camera.setTranslateY(camera.getTranslateY() + deltaY);
+            			
+            		}
+            		else {
+            			hitbox.setTranslateX(camera.getTranslateX());
+            			hitbox.setTranslateY(camera.getTranslateY() + 25);
+            			hitbox.setTranslateZ(camera.getTranslateZ());
+            		}
+            	}
+        		else {
+        			camera.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
+                	camera.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
+                	camera.setTranslateY(camera.getTranslateY() + deltaY);
+        		}
         		
-        	
-//        	hitbox.setTranslateX(camera.getTranslateX());
-//            hitbox.setTranslateY(camera.getTranslateY());
-//            hitbox.setTranslateZ(camera.getTranslateZ());
+        	}
+        	else {
+        		camera.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
+            	camera.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
+            	camera.setTranslateY(camera.getTranslateY() + deltaY);
+        	}
         }
         	hitbox.setHeight(50);
         	if (!sneaking) {
@@ -1069,4 +1154,24 @@ class FlatRect {
 		r.setFill(c);
 	}
 			
+}
+class Point3DKey {
+    public Point3D point;
+
+    public Point3DKey(double x, double y, double z) {
+        this.point = new Point3D(x, y, z);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Point3DKey)) return false;
+        Point3DKey other = (Point3DKey) obj;
+        return point.equals(other.point);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(point.getX(), point.getY(), point.getZ());
+    }
 }
