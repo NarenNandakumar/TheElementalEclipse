@@ -625,6 +625,7 @@ public class App extends Application {
             	camera.setTranslateY(-225);
             	camera.setTranslateX(0);
             	camera.setTranslateZ(0);
+            	scene.setFill(Color.DARKSLATEGRAY);
             	playerVelocity = 0;
             }
             if (e.getCode() == KeyCode.SHIFT) {
