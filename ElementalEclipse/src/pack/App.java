@@ -63,6 +63,7 @@ public class App extends Application {
     static Scene scene = new Scene(root, 800, 600, true);
 //    static Scene d2 = new Scene(root, 800, 600, true);
     static ArrayList<Rect> fs = new ArrayList<Rect>();
+    
     static ArrayList<Rect> bs = new ArrayList<Rect>();
     static ArrayList<Rect> us = new ArrayList<Rect>();
     static ArrayList<Rect> ds = new ArrayList<Rect>();
