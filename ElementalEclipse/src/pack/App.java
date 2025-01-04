@@ -32,6 +32,7 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.*;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.scene.transform.NonInvertibleTransformException;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Transform;
@@ -99,7 +100,12 @@ public class App extends Application {
     static int spawnX;
     static int spawnY;
     static int spawnZ;
+    static boolean jumping = false;
     static boolean onEdge = false;
+    static boolean gamePaused = true;
+    static ArrayList<Integer> numItems = new ArrayList<Integer>();
+    static ArrayList<FlatRect> inv = new ArrayList<FlatRect>();
+   
 //    Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
     
     public App() throws AWTException {
@@ -119,6 +125,11 @@ public class App extends Application {
     }
     @Override
     public void start(Stage primaryStage) throws Exception {
+    	if (element.equals("wind")) {
+    		for (int i = 0; i < 10; i++) {
+    			numItems.add(10);
+    		}
+    	}
     	setSpawn(0, 8, 0);
 //    	b.setTexture("file:Textures/god.png");
 //    	blocks.add(b);
@@ -190,17 +201,27 @@ public class App extends Application {
                     	Image image = new Image("file:Textures/god.png");
                     	temp.r.setFill(new ImagePattern(image));
                     	options.add("scooby");
+                    	inv.add(temp);
+                    	
+                    	
                     }
                     else if (block.equals("blueBlock")) {
                     	temp.setColor(Color.BLUE);
-                    	
+                    	inv.add(temp);
                     	options.add("blueBlock");
                     }
                     else if (block.equals("blueBlockTransparent")) {
                     	temp.setColor(Color.BLUE);
                     	temp.r.setOpacity(0.4);
                     	options.add(block);
+                    	inv.add(temp);
                     	
+                    }
+                    else if (block.equals("element")) {
+                    	Image image = new Image("file:Textures/element.png");
+                    	temp.r.setFill(new ImagePattern(image));
+                    	options.add("element");
+                    	inv.add(temp);
                     }
                     if (slots.size() == 0) {
                     	temp.setColor(Color.WHITE);
@@ -214,6 +235,15 @@ public class App extends Application {
 //                    map.put(k, word);
                 }
             }
+            for (int i = 0; i < inv.size(); i++) {
+            	FlatRect temp = inv.get(i);
+            	System.out.println(temp.xxp);
+            	FlatRect itemHolder = new FlatRect(temp.w, 0.02, (temp.xxp), (temp.yyp) + temp.h);
+            	itemHolder.setColor(Color.GRAY);
+            	FlatText t = new FlatText(temp.w, 0.02, (temp.xxp), (temp.yyp) + temp.h, i);
+            	
+            
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -226,7 +256,12 @@ public class App extends Application {
         previousX = scene.getWidth() / 2;
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
-        Timeline gen = new Timeline(new KeyFrame(Duration.millis(100), e -> {
+        Timeline gen = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+        	if (jumping) {
+        		if (playerVelocity == 0) {		
+        			playerVelocity = -1.5;
+        		}
+        	}
 //        	int hiddenBlocks = 0;
         	for (Cube block : blocks) {
         		if (block.box.computeAreaInScreen() == 0) {
@@ -279,7 +314,7 @@ public class App extends Application {
         	}
 //        	System.out.println(-(int)Math.round(hitbox.getTranslateY()/25 - 1));
         	playerX = (int)Math.round(hitbox.getTranslateX()/25);
-        	playerY = (-(int)Math.floor(hitbox.getTranslateY() + 50)/25) + 1;
+        	playerY = (-(int)Math.floor((hitbox.getTranslateY() + 25)/25)) + 1;
         	playerZ = (int)Math.round(hitbox.getTranslateZ()/25);
         	
         	cameraX = camera.getTranslateX();
@@ -328,6 +363,7 @@ public class App extends Application {
         			hitbox.setHeight(35);
             		hitbox.setTranslateY(camera.getTranslateY() +17.5);
             	}
+        		playerVelocity = 0;
         	}
         	hitbox.setHeight(hitbox.getHeight());
 //        	System.out.println(playerVelocity);
@@ -375,7 +411,7 @@ public class App extends Application {
                 lastTime = currentTime;
             }
         });
-        scene.setOnMouseClicked(e -> {
+        scene.setOnMousePressed(e -> {
         	
         	var r = e.getPickResult().getIntersectedNode();
         	e.getPickResult().getIntersectedFace();
@@ -601,62 +637,62 @@ public class App extends Application {
     }
 
     private void setupMovement(Scene scene, PerspectiveCamera camera, Stage primaryStage) {
-        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(.1), e -> {
+        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, .02, 0);
+            moveCamera(camera, 0, 1, 0);
         	}
         	else {
-        		moveCamera(camera, 0, .005, 0);
+        		moveCamera(camera, 0, .5, 0);
         	}
         }));
         moveF.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(.1), e -> {
+        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, .02, 0, 0);
+            moveCamera(camera, 1, 0, 0);
         	}
         	else {
-        		moveCamera(camera, 0.005, 0, 0);
+        		moveCamera(camera, 0.5, 0, 0);
         	}
         }));
         moveR.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(.1), e -> {
+        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, -.02, 0);
+            moveCamera(camera, 0, -1, 0);
         	}
         	else {
-        		moveCamera(camera, 0, -.005, 0);
+        		moveCamera(camera, 0, -.5, 0);
         	}
         }));
         moveB.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(.1), e -> {
+        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, -.02, 0, 0);
+            moveCamera(camera, -1, 0, 0);
         	}
         	else {
-        		moveCamera(camera, -0.005, 0, 0);
+        		moveCamera(camera, -0.5, 0, 0);
         	}
         }));
         moveL.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(.1), e -> {
+        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, 0, -.02);
+            moveCamera(camera, 0, 0, -1);
         	}
         	else {
-        		moveCamera(camera, 0, 0, -0.005);
+        		moveCamera(camera, 0, 0, -0.5);
         	}
         }));
         moveU.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(.1), e -> {
+        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, 0, .02);
+            moveCamera(camera, 0, 0, 1);
         	}
         	else {
-        		moveCamera(camera, 0, 0, 0.005);
+        		moveCamera(camera, 0, 0, 0.5);
         	}
         }));
         moveD.setCycleCount(Timeline.INDEFINITE);
@@ -667,9 +703,7 @@ public class App extends Application {
             if (e.getCode() == KeyCode.S) moveB.play();
             if (e.getCode() == KeyCode.A) moveL.play();
             if (e.getCode() == KeyCode.SPACE) {
-            	if (playerVelocity == 0) {
-            		playerVelocity = -1.5;
-            	}
+            	jumping = true;
             	
             }
             if (e.getCode() == KeyCode.R) { 
@@ -680,8 +714,10 @@ public class App extends Application {
             	playerVelocity = 0;
             }
             if (e.getCode() == KeyCode.SHIFT) {
+            	if (sneaking == false) {
             	sneaking = true;
             	camera.setTranslateY(camera.getTranslateY() + 15);
+            	}
             }
             if (e.getCode() == KeyCode.ESCAPE) {
                 primaryStage.close();
@@ -774,7 +810,7 @@ public class App extends Application {
             if (e.getCode() == KeyCode.D) moveR.stop();
             if (e.getCode() == KeyCode.S) moveB.stop();
             if (e.getCode() == KeyCode.A) moveL.stop();
-//            if (e.getCode() == KeyCode.SPACE) moveU.stop();
+            if (e.getCode() == KeyCode.SPACE) jumping = false;
             if (e.getCode() == KeyCode.SHIFT) {
             	sneaker = true;
             }
@@ -1044,6 +1080,15 @@ class Cube {
 //        	box.setOpacity(0.1);
         	this.box.setMaterial(m);
         }
+        else if (path.equals("element")) {
+        	Image textureImage = new Image("file:Textures/element.png");
+            if (textureImage.isError()) {
+                System.err.println("Error loading texture: " + textureImage.getException());
+                return;
+            }
+            m.setDiffuseMap(textureImage);
+            this.box.setMaterial(m);
+        }
     }
 	public boolean isInFrustum() {
 		Box object = box;
@@ -1121,11 +1166,19 @@ class FlatRect {
 	static double screenHeight = Math.abs(2 * (z * Math.tan(radian/2)));
 	static Rotate tempX = App.rotateX;
 	static Rotate tempY = App.rotateY;
+	double xxp;
+	double yyp;
+	double w;
+	double h;
 	Rectangle r;
 	static ArrayList<FlatRect> menuList = new ArrayList<FlatRect>();
 	public FlatRect(double x, double y, double xp, double yp) throws NonInvertibleTransformException {
 //		Transform inv = App.camera.getLocalToSceneTransform().createInverse();
 		// Create a rectangle
+		w = x;
+		h = y;
+		xxp = xp;
+		yyp = yp;
 		r = new Rectangle(x * screenWidth, y * screenHeight);
 		r.setTranslateZ(100);
 		r.setOpacity(0.8);
@@ -1152,6 +1205,57 @@ class FlatRect {
 	}
 	public void setColor(Color c) {
 		r.setFill(c);
+	}
+			
+}
+class FlatText {
+	static double ratio = App.screenX/App.screenY;
+	static double vfov =  App.cameraFOV;
+	static double radian = vfov * (Math.PI/180);
+	static double hfov = 2*(Math.atan(Math.tan(radian/2) * ratio));
+	static double z = 1000;
+	static double screenWidth = Math.abs(2 * (z * Math.tan(hfov/2)));
+	static double screenHeight = Math.abs(2 * (z * Math.tan(radian/2)));
+	static Rotate tempX = App.rotateX;
+	static Rotate tempY = App.rotateY;
+	double xxp;
+	double yyp;
+	double w;
+	double h;
+	Text t;
+	static ArrayList<FlatRect> menuList = new ArrayList<FlatRect>();
+	public FlatText(double x, double y, double xp, double yp, int index) throws NonInvertibleTransformException {
+//		Transform inv = App.camera.getLocalToSceneTransform().createInverse();
+		// Create a rectangle
+		w = x;
+		h = y;
+		xxp = xp;
+		yyp = yp;
+		t = new Text(Integer.toString(App.numItems.get(index)));
+		t.setTranslateZ(100);
+		t.setDepthTest(DepthTest.DISABLE);
+		App.root.getChildren().add(t);
+//		r.getTransforms().add(inv)
+		Rotate xt = new Rotate(0, Rotate.Y_AXIS);
+		Rotate yt = new Rotate(0, Rotate.X_AXIS);
+		t.getTransforms().addAll(xt, yt);
+		Timeline timer = new Timeline(new KeyFrame(Duration.millis(.1), e -> {
+			App.root.getChildren().remove(t);
+			xt.setAngle(App.cameraRX);
+			yt.setAngle(App.cameraRY);
+			Transform local = App.camera.getLocalToSceneTransform();
+			Point3D newlocal = local.transform(new Point3D(xp * screenWidth, yp * screenHeight, z));
+			t.setTranslateX(newlocal.getX());
+			t.setTranslateY(newlocal.getY());
+			t.setTranslateZ(newlocal.getZ());
+			App.root.getChildren().add(t);
+			
+		}));
+		timer.setCycleCount(Timeline.INDEFINITE);
+		timer.play();
+	}
+	public void setColor(Color c) {
+		t.setFill(c);
 	}
 			
 }
