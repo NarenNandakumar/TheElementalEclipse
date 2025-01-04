@@ -240,7 +240,7 @@ public class App extends Application {
             	System.out.println(temp.xxp);
             	FlatRect itemHolder = new FlatRect(temp.w, 0.02, (temp.xxp), (temp.yyp) + temp.h);
             	itemHolder.setColor(Color.GRAY);
-            	FlatText t = new FlatText(temp.w, 0.02, (temp.xxp), (temp.yyp) + temp.h, i);
+            	FlatText t = new FlatText(temp.w, 0.02, (temp.xxp), (temp.yyp) + temp.h + 0.02, i);
             	
             
             }
@@ -256,7 +256,7 @@ public class App extends Application {
         previousX = scene.getWidth() / 2;
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
-        Timeline gen = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+        Timeline gen = new Timeline(new KeyFrame(Duration.millis(100), e -> {
         	if (jumping) {
         		if (playerVelocity == 0) {		
         			playerVelocity = -1.5;
@@ -637,62 +637,62 @@ public class App extends Application {
     }
 
     private void setupMovement(Scene scene, PerspectiveCamera camera, Stage primaryStage) {
-        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(1), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, 1, 0);
+            moveCamera(camera, 0, .1, 0);
         	}
         	else {
-        		moveCamera(camera, 0, .5, 0);
+        		moveCamera(camera, 0, .05, 0);
         	}
         }));
         moveF.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(1), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 1, 0, 0);
+            moveCamera(camera, .1, 0, 0);
         	}
         	else {
-        		moveCamera(camera, 0.5, 0, 0);
+        		moveCamera(camera, 0.05, 0, 0);
         	}
         }));
         moveR.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(1), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, -1, 0);
+            moveCamera(camera, 0, -.1, 0);
         	}
         	else {
-        		moveCamera(camera, 0, -.5, 0);
+        		moveCamera(camera, 0, -.05, 0);
         	}
         }));
         moveB.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(1), e -> {
         	if (!sneaking) {
-            moveCamera(camera, -1, 0, 0);
+            moveCamera(camera, -.1, 0, 0);
         	}
         	else {
-        		moveCamera(camera, -0.5, 0, 0);
+        		moveCamera(camera, -0.05, 0, 0);
         	}
         }));
         moveL.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(1), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, 0, -1);
+            moveCamera(camera, 0, 0, -.1);
         	}
         	else {
-        		moveCamera(camera, 0, 0, -0.5);
+        		moveCamera(camera, 0, 0, -0.05);
         	}
         }));
         moveU.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(1), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, 0, 1);
+            moveCamera(camera, 0, 0, .1);
         	}
         	else {
-        		moveCamera(camera, 0, 0, 0.5);
+        		moveCamera(camera, 0, 0, 0.05);
         	}
         }));
         moveD.setCycleCount(Timeline.INDEFINITE);
