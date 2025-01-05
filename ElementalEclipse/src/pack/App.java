@@ -89,7 +89,7 @@ public class App extends Application {
     static int selectedSlot = 0;
     static String selectedBlock = "";
     static ArrayList<String> options = new ArrayList<String>();
-    static boolean godMode = true;
+    static boolean godMode = false;
     static double playerVelocity = 0;
     static boolean sneaking = false;
     static Cube standOn;
@@ -223,24 +223,6 @@ public class App extends Application {
                     	options.add("element");
                     	inv.add(temp);
                     }
-                    else if (block.equals("windBlock")) {
-                    	Image image = new Image("file:Textures/windBlock.png");
-                    	temp.r.setFill(new ImagePattern(image));
-                    	options.add("windBlock");
-                    	inv.add(temp);
-                    }
-                    else if (block.equals("magma")) {
-                    	Image image = new Image("file:Textures/magma.png");
-                    	temp.r.setFill(new ImagePattern(image));
-                    	options.add("magma");
-                    	inv.add(temp);
-                    }
-                    else if (block.equals("water")) {
-                    	Image image = new Image("file:Textures/water.png");
-                    	temp.r.setFill(new ImagePattern(image));
-                    	options.add("water");
-                    	inv.add(temp);
-                    }
                     if (slots.size() == 0) {
                     	temp.setColor(Color.WHITE);
                     }
@@ -275,7 +257,6 @@ public class App extends Application {
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
         Timeline gen = new Timeline(new KeyFrame(Duration.millis(100), e -> {
-        	
         	if (jumping) {
         		if (playerVelocity == 0) {		
         			playerVelocity = -1.5;
@@ -722,12 +703,7 @@ public class App extends Application {
             if (e.getCode() == KeyCode.S) moveB.play();
             if (e.getCode() == KeyCode.A) moveL.play();
             if (e.getCode() == KeyCode.SPACE) {
-            	if (godMode) {
-            		moveU.play();
-            	}
-            	else {
-            		jumping = true;
-            	}
+            	jumping = true;
             	
             }
             if (e.getCode() == KeyCode.R) { 
@@ -738,14 +714,9 @@ public class App extends Application {
             	playerVelocity = 0;
             }
             if (e.getCode() == KeyCode.SHIFT) {
-            	if (godMode) {
-            		moveD.play();
-            	}
-            	else {
             	if (sneaking == false) {
             	sneaking = true;
             	camera.setTranslateY(camera.getTranslateY() + 15);
-            	}
             	}
             }
             if (e.getCode() == KeyCode.ESCAPE) {
@@ -839,21 +810,9 @@ public class App extends Application {
             if (e.getCode() == KeyCode.D) moveR.stop();
             if (e.getCode() == KeyCode.S) moveB.stop();
             if (e.getCode() == KeyCode.A) moveL.stop();
-            if (e.getCode() == KeyCode.SPACE) {
-            	if (godMode) {
-            		moveU.stop();
-            	}
-            	else {
-            	jumping = false;
-            	}
-            }
+            if (e.getCode() == KeyCode.SPACE) jumping = false;
             if (e.getCode() == KeyCode.SHIFT) {
-            	if (godMode) {
-            		moveD.stop();
-            	}
-            	else {
             	sneaker = true;
-            	}
             }
             
         });
@@ -1126,41 +1085,7 @@ class Cube {
             if (textureImage.isError()) {
                 System.err.println("Error loading texture: " + textureImage.getException());
                 return;
-        }
-            
-            m.setDiffuseMap(textureImage);
-            this.box.setMaterial(m);
-        }
-        else if (path.equals("windBlock")) {
-        	Image textureImage = new Image("file:Textures/WindBlock.png");
-            if (textureImage.isError()) {
-                System.err.println("Error loading texture: " + textureImage.getException());
-                return;
-        }
-            
-            
-            m.setDiffuseMap(textureImage);
-            this.box.setMaterial(m);
-        }
-        else if (path.equals("magma")) {
-        	Image textureImage = new Image("file:Textures/magma.png");
-            if (textureImage.isError()) {
-                System.err.println("Error loading texture: " + textureImage.getException());
-                return;
-        }
-            
-            
-            m.setDiffuseMap(textureImage);
-            this.box.setMaterial(m);
-        }
-        else if (path.equals("water")) {
-        	Image textureImage = new Image("file:Textures/water.png");
-            if (textureImage.isError()) {
-                System.err.println("Error loading texture: " + textureImage.getException());
-                return;
-        }
-            
-            
+            }
             m.setDiffuseMap(textureImage);
             this.box.setMaterial(m);
         }
