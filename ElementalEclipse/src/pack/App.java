@@ -21,6 +21,7 @@ import javafx.scene.effect.GaussianBlur;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.PickResult;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
@@ -41,7 +42,9 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +64,7 @@ public class App extends Application {
     public static PerspectiveCamera camera = new PerspectiveCamera(true);
     static Rotate rotateX = new Rotate(0, Rotate.X_AXIS);
     static Rotate rotateY = new Rotate(0, Rotate.Y_AXIS);
-    static Scene scene = new Scene(root, 800, 600, true);
+    static Scene scene = new Scene(root, 800, 600, true, SceneAntialiasing.BALANCED);
 //    static Scene d2 = new Scene(root, 800, 600, true);
     static ArrayList<Rect> fs = new ArrayList<Rect>();
     static ArrayList<Rect> bs = new ArrayList<Rect>();
@@ -82,14 +85,14 @@ public class App extends Application {
     private static long lastTime = System.nanoTime();
     static String gameStage = "Menu";
     static String element = "wind";
-    static boolean devMode = true;
+//    static boolean devMode = true;
     Map<Point3DKey, String> map = new HashMap<>();
     
     static ArrayList<FlatRect> slots = new ArrayList<FlatRect>();
     static int selectedSlot = 0;
     static String selectedBlock = "";
     static ArrayList<String> options = new ArrayList<String>();
-    static boolean godMode = false;
+    static boolean godMode = true;
     static double playerVelocity = 0;
     static boolean sneaking = false;
     static Cube standOn;
@@ -105,7 +108,8 @@ public class App extends Application {
     static boolean gamePaused = true;
     static ArrayList<Integer> numItems = new ArrayList<Integer>();
     static ArrayList<FlatRect> inv = new ArrayList<FlatRect>();
-   
+    static double reach = 6;
+    static double j = reach * 25;
 //    Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
     
     public App() throws AWTException {
@@ -134,6 +138,7 @@ public class App extends Application {
 //    	b.setTexture("file:Textures/god.png");
 //    	blocks.add(b);
        
+       
         try (BufferedReader br = new BufferedReader(new FileReader("Maps/wind.csv"))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -141,7 +146,7 @@ public class App extends Application {
                 if (values.length == 4) {  // Ensure there are exactly 4 values in the line
                     // Convert the first three values to integers (or a composite key)
 //                    String key = values[0] + "-" + values[1] + "-" + values[2]; // Create a unique key from the first three integers
-                    Point3DKey k = new Point3DKey(Integer.parseInt(values[0]), Integer.parseInt(values[1]), Integer.parseInt(values[2]));
+                    Point3DKey k = new Point3DKey(Double.parseDouble(values[0]), Double.parseDouble(values[1]), Double.parseDouble(values[2]));
                     String word = values[3]; // The last value is the word
 
                     // Store in the dictionary
@@ -165,7 +170,7 @@ public class App extends Application {
         
         scene.setFill(Color.DARKSLATEGRAY);
         scene.setCamera(camera);
-        StackPane s = new StackPane();
+        
 //        b.setTranslateY(100);
 //        root.getChildren().add(rootroot);
         
@@ -176,13 +181,13 @@ public class App extends Application {
         primaryStage.show();
         AmbientLight light = new AmbientLight(Color.WHITE);
         root.getChildren().add(light);
-        setupMovement(scene, camera, primaryStage);
+        
         screenX = primaryStage.getWidth();
         screenY = primaryStage.getHeight();
 //        FlatRect hotbar1 = new FlatRect(0.05, 0.1, -0.3, 0.35);
 //        FlatRect h1test = new FlatRect(0.03, 0.07, -0.3, 0.35);
 //        h1test.setColor(Color.RED);
-        
+        setupMovement(scene, camera, primaryStage);
         try (BufferedReader br = new BufferedReader(new FileReader("UI/WindHUD.csv"))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -223,6 +228,36 @@ public class App extends Application {
                     	options.add("element");
                     	inv.add(temp);
                     }
+                    else if (block.equals("wind")) {
+                    	Image image = new Image("file:Textures/wind.png");
+                    	temp.r.setFill(new ImagePattern(image));
+                    	options.add("wind");
+                    	inv.add(temp);
+                    }
+                    else if (block.equals("magma")) {
+                    	Image image = new Image("file:Textures/magma.png");
+                    	temp.r.setFill(new ImagePattern(image));
+                    	options.add("magma");
+                    	inv.add(temp);
+                    }
+                    else if (block.equals("water")) {
+                    	Image image = new Image("file:Textures/water.png");
+                    	temp.r.setFill(new ImagePattern(image));
+                    	options.add("water");
+                    	inv.add(temp);
+                    }
+                    else if (block.equals("color")) {
+                    	Image image = new Image("file:Textures/color.png");
+                    	temp.r.setFill(new ImagePattern(image));
+                    	options.add("color");
+                    	inv.add(temp);
+                    }
+                    else if (block.equals("brick")) {
+                    	Image image = new Image("file:Textures/brick.png");
+                    	temp.r.setFill(new ImagePattern(image));
+                    	options.add("brick");
+                    	inv.add(temp);
+                    }
                     if (slots.size() == 0) {
                     	temp.setColor(Color.WHITE);
                     }
@@ -257,24 +292,40 @@ public class App extends Application {
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
         Timeline gen = new Timeline(new KeyFrame(Duration.millis(100), e -> {
+        	j = reach * 25;
+//        	Point3DKey pa = new Point3DKey(0,0,0);
+//        	map.remove(pa);
+//        	System.out.println(map.size());
+        	
         	if (jumping) {
         		if (playerVelocity == 0) {		
         			playerVelocity = -1.5;
         		}
         	}
 //        	int hiddenBlocks = 0;
-        	for (Cube block : blocks) {
-        		if (block.box.computeAreaInScreen() == 0) {
-//        			System.out.println(1);
-        			block.box.setVisible(false);
-//        			hiddenBlocks++;
-        		}
-        		else {
-        			block.box.setVisible(true);
-        		}
-//            	System.out.println(b.box.getBoundsInParent().getHeight());
-//            	System.out.println(b.box.computeAreaInScreen());
-        	}
+        	Platform.runLater(() -> {
+        		for (Cube block : blocks) {
+        			if (!root.getChildren().contains(block.box)) { 
+        			root.getChildren().add(block.box);
+        			}
+            		if (block.box.computeAreaInScreen() == 0) {
+//            			System.out.println(1);
+//            			block.box.setVisible(false);
+            			root.getChildren().removeAll(block.box);
+//            			hiddenBlocks++;
+            		}
+//            		else {
+//            			block.box.setVisible(true);
+//            		}
+//                	System.out.println(b.box.getBoundsInParent().getHeight());
+//                	System.out.println(b.box.computeAreaInScreen());
+            	}
+        	});
+        	
+//        	blocks.parallelStream().forEach(block -> {
+//        	    boolean isVisible = block.box.computeAreaInScreen() > 0;
+//        	    block.box.setVisible(isVisible);
+//        	});
         	if (camera.getTranslateY() >= 300) {
         		if (scene.getFill() == Color.DARKSLATEGRAY) {
         			scene.setFill(Color.RED);
@@ -326,6 +377,7 @@ public class App extends Application {
         gen.setCycleCount(Timeline.INDEFINITE);
         gen.play();
         Timeline motion = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+        	
         	playerVelocity += 0.03;
         	hitbox.setHeight(50);
         	hitbox.setTranslateY(camera.getTranslateY() + playerVelocity + 25);
@@ -378,11 +430,11 @@ public class App extends Application {
 //        	Point3DKey aaa = new Point3DKey(0,0,0);
 //        	Point3DKey bbb = new Point3DKey(0,0,0);
 //        	System.out.println(aaa == bbb);
-            long currentTime = System.nanoTime();
-            long deltaTime = (currentTime - lastTime) / 1000000; // Convert to ms
-
-            // Only update if 10ms have passed
-            if (deltaTime >= 10) {
+//            long currentTime = System.nanoTime();
+//            long deltaTime = (currentTime - lastTime) / 1000000; // Convert to ms
+//
+//            // Only update if 10ms have passed
+//            if (deltaTime >= 10) {
                 double deltaX = event.getScreenX() - (scene.getWidth() / 2);
                 double deltaY = event.getScreenY() - (scene.getHeight() / 2);
 
@@ -408,8 +460,8 @@ public class App extends Application {
                 });
 
                 // Update lastTime to current time
-                lastTime = currentTime;
-            }
+//                lastTime = currentTime;
+//            }
         });
         scene.setOnMousePressed(e -> {
         	
@@ -420,6 +472,12 @@ public class App extends Application {
         	for (int i = 0; i < fs.size(); i++) {
         		if (r == fs.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
 	        			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() - 25);
 	//        			temp.setTexture("file:/C:/Users/shunm/Force.png");
 	        			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -437,12 +495,20 @@ public class App extends Application {
 	        				temp.setTexture(selectedBlock);
 	        				blocks.add(temp);
 	        				map.put(p, selectedBlock);
+	        				
+	        			       
 	        			}
         			}
         			else {
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
-        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
         				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
@@ -455,6 +521,12 @@ public class App extends Application {
         		}
         		else if (r == bs.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() + 25);
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -471,13 +543,20 @@ public class App extends Application {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
+        				
         			}
         			
         			}
         			else {
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
-        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
         				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
@@ -490,6 +569,12 @@ public class App extends Application {
         		}
         		else if (r == ls.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()-25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -507,13 +592,20 @@ public class App extends Application {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
+        				
         			}
         			
         			}
         			else {
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
-        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
         				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
@@ -526,6 +618,12 @@ public class App extends Application {
         		}
         		else if (r == rs.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()+25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -542,13 +640,20 @@ public class App extends Application {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
+        				
         			}
         			
         			}
         			else {
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
-        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
         				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
@@ -561,6 +666,12 @@ public class App extends Application {
         		}
         		else if (r == us.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()-25, (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -578,13 +689,20 @@ public class App extends Application {
         				
         				blocks.add(temp);
         				map.put(p, selectedBlock);
+        				
         			}
         			
         			}
         			else {
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
-        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
         				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
@@ -597,6 +715,12 @@ public class App extends Application {
         		}
         		else if (r == ds.get(i).r) { 
         			if (e.getButton() == MouseButton.SECONDARY) { 
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()+25, (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -613,13 +737,20 @@ public class App extends Application {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
+        				
         			}
         			
         			}
         			else {
+        				if (!godMode) {
+        					PickResult pickResult = e.getPickResult();
+        					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
-        				Point3DKey h = new Point3DKey(cub.getTranslateX(), cub.getTranslateY(), cub.getTranslateZ());
+        				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
         				map.remove(h);
         				App.root.getChildren().remove(fs.get(i).c.box);
         	            App.root.getChildren().remove(fs.get(i).c.f.r);
@@ -696,15 +827,47 @@ public class App extends Application {
         	}
         }));
         moveD.setCycleCount(Timeline.INDEFINITE);
-        
+        scene.setOnScroll(e -> {
+        	
+        	if (e.getDeltaY() < 0 || e.getDeltaX() < 0) {
+        		slots.get(selectedSlot).setColor(Color.BLACK);
+        		if (selectedSlot < 9) {
+        			selectedSlot++;
+        		}
+        		else {
+        			selectedSlot = 0;
+        		}
+        		slots.get(selectedSlot).setColor(Color.WHITE);
+        		if (options.size() > selectedSlot) {
+            		selectedBlock = options.get(selectedSlot);
+            	}
+        	}
+        	else if (e.getDeltaY() > 0 || e.getDeltaX() > 0){
+        		slots.get(selectedSlot).setColor(Color.BLACK);
+        		if (selectedSlot > 0) {
+        			selectedSlot--;
+        		}
+        		else {
+        			selectedSlot = 9;
+        		}
+        		slots.get(selectedSlot).setColor(Color.WHITE);
+        		if (options.size() > selectedSlot) {
+            		selectedBlock = options.get(selectedSlot);
+            	}
+        	}
+        });
         scene.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.W) moveF.play();
             if (e.getCode() == KeyCode.D) moveR.play();
             if (e.getCode() == KeyCode.S) moveB.play();
             if (e.getCode() == KeyCode.A) moveL.play();
             if (e.getCode() == KeyCode.SPACE) {
+            	if (!godMode) {
             	jumping = true;
-            	
+            	}
+            	else {
+            		moveU.play();
+            	}
             }
             if (e.getCode() == KeyCode.R) { 
             	camera.setTranslateY(-spawnY * 25);
@@ -714,12 +877,32 @@ public class App extends Application {
             	playerVelocity = 0;
             }
             if (e.getCode() == KeyCode.SHIFT) {
+            	if (!godMode) {
             	if (sneaking == false) {
             	sneaking = true;
             	camera.setTranslateY(camera.getTranslateY() + 15);
+            	} 
+            	}
+            	else {
+            		moveD.play();
             	}
             }
             if (e.getCode() == KeyCode.ESCAPE) {
+            	BufferedWriter bw;
+    			try {
+    				bw = new BufferedWriter(new FileWriter("Maps/wind.csv", false));
+    				for (Map.Entry<Point3DKey, String> entry : map.entrySet()) {
+    					Point3DKey p = entry.getKey();
+    					String sb = entry.getValue();
+    					String c = Double.toString(p.point.getX()) + "," + Double.toString(p.point.getY()) + "," + Double.toString(p.point.getZ()) + "," + sb;
+    					bw.write("\n" + c);
+    				}		
+    			    bw.flush();
+    			    bw.close();
+    			} catch (IOException e1) {
+    				// TODO Auto-generated catch block
+    				e1.printStackTrace();
+    			}
                 primaryStage.close();
             }
             if (e.getCode() == KeyCode.DIGIT1) {
@@ -810,9 +993,21 @@ public class App extends Application {
             if (e.getCode() == KeyCode.D) moveR.stop();
             if (e.getCode() == KeyCode.S) moveB.stop();
             if (e.getCode() == KeyCode.A) moveL.stop();
-            if (e.getCode() == KeyCode.SPACE) jumping = false;
+            if (e.getCode() == KeyCode.SPACE) {
+            	if (!godMode) {
+            	jumping = false;
+            	}
+            	else {
+            		moveU.stop();
+            	}
+            }
             if (e.getCode() == KeyCode.SHIFT) {
+            	if (!godMode) {
             	sneaker = true;
+            	}
+            	else {
+            		moveD.stop();
+            	}
             }
             
         });
@@ -1082,6 +1277,51 @@ class Cube {
         }
         else if (path.equals("element")) {
         	Image textureImage = new Image("file:Textures/element.png");
+            if (textureImage.isError()) {
+                System.err.println("Error loading texture: " + textureImage.getException());
+                return;
+            }
+            m.setDiffuseMap(textureImage);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("wind")) {
+        	Image textureImage = new Image("file:Textures/wind.png");
+            if (textureImage.isError()) {
+                System.err.println("Error loading texture: " + textureImage.getException());
+                return;
+            }
+            m.setDiffuseMap(textureImage);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("magma")) {
+        	Image textureImage = new Image("file:Textures/magma.png");
+            if (textureImage.isError()) {
+                System.err.println("Error loading texture: " + textureImage.getException());
+                return;
+            }
+            m.setDiffuseMap(textureImage);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("water")) {
+        	Image textureImage = new Image("file:Textures/water.png");
+            if (textureImage.isError()) {
+                System.err.println("Error loading texture: " + textureImage.getException());
+                return;
+            }
+            m.setDiffuseMap(textureImage);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("color")) {
+        	Image textureImage = new Image("file:Textures/color.png");
+            if (textureImage.isError()) {
+                System.err.println("Error loading texture: " + textureImage.getException());
+                return;
+            }
+            m.setDiffuseMap(textureImage);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("brick")) {
+        	Image textureImage = new Image("file:Textures/brick.png");
             if (textureImage.isError()) {
                 System.err.println("Error loading texture: " + textureImage.getException());
                 return;
