@@ -130,19 +130,19 @@ public class App extends Application {
          camera.setTranslateZ(spawnZ * 25);
     }
     public void worldSet(String element, Stage primaryStage) throws NumberFormatException, NonInvertibleTransformException {
-    	Timeline warmUp = new Timeline(
-    		    new KeyFrame(Duration.millis(100), e -> {
-    		        
-    		    })
-    		);
-    		warmUp.setCycleCount(10); // Run this for 10 frames
-    		warmUp.play();
+//    	Timeline warmUp = new Timeline(
+//    		    new KeyFrame(Duration.millis(100), e -> {
+//    		        
+//    		    })
+//    		);
+//    		warmUp.setCycleCount(10); // Run this for 10 frames
+//    		warmUp.play();
     	if (element.equals("wind")) {
     		for (int i = 0; i < 10; i++) {
     			numItems.add(10);
     		}
     	}
-    	setSpawn(0, 8, 0);
+    	setSpawn(0, 9, 0);
         setupMovement(scene, camera, primaryStage);
     	Platform.runLater(() -> {
     		try (BufferedReader br = new BufferedReader(new FileReader("Maps/wind.csv"))) {
