@@ -108,7 +108,10 @@ public class App extends Application {
     static double reach = 8;
     static double j = reach * 25;  
     static boolean sprinting = false;
+    static boolean teleported = false;
     static ArrayList<FlatText> txts = new ArrayList<FlatText>();
+    static Cube tp1 = null;
+    static Cube tp2 = null;
 //    static int waiter = 0;
     public App() throws AWTException {
         robot = new Robot();
@@ -127,19 +130,19 @@ public class App extends Application {
          camera.setTranslateZ(spawnZ * 25);
     }
     public void worldSet(String element, Stage primaryStage) throws NumberFormatException, NonInvertibleTransformException {
-    	Timeline warmUp = new Timeline(
-    		    new KeyFrame(Duration.millis(100), e -> {
-    		        
-    		    })
-    		);
-    		warmUp.setCycleCount(10); // Run this for 10 frames
-    		warmUp.play();
+//    	Timeline warmUp = new Timeline(
+//    		    new KeyFrame(Duration.millis(100), e -> {
+//    		        
+//    		    })
+//    		);
+//    		warmUp.setCycleCount(10); // Run this for 10 frames
+//    		warmUp.play();
     	if (element.equals("wind")) {
     		for (int i = 0; i < 10; i++) {
     			numItems.add(10);
     		}
     	}
-    	setSpawn(0, 8, 0);
+    	setSpawn(0, 9, 0);
         setupMovement(scene, camera, primaryStage);
     	Platform.runLater(() -> {
     		try (BufferedReader br = new BufferedReader(new FileReader("Maps/wind.csv"))) {
@@ -307,7 +310,32 @@ public class App extends Application {
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
         Timeline gen = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-//        	System.out.println(blocks.get(0).box.getMaterial().toString());
+        	if (tp1 != null) {
+        			if (T(hitbox, tp1.box) && !teleported) { 
+                		if (tp2 != null) {
+                			camera.setTranslateX(tp2.box.getTranslateX());
+                			camera.setTranslateZ(tp2.box.getTranslateZ());
+                			camera.setTranslateY(tp2.box.getTranslateY() - 101);
+                			teleported = true;
+                		}
+                	}
+//        		}
+        	}
+        	if (tp2 != null) {
+    			if (T(hitbox, tp2.box) && !teleported) { 
+            		if (tp1 != null) {
+            			camera.setTranslateX(tp1.box.getTranslateX());
+            			camera.setTranslateZ(tp1.box.getTranslateZ());
+            			camera.setTranslateY(tp1.box.getTranslateY() - 101);
+            			teleported = true;
+            		}
+            	}
+    	}       	
+        	if (tp1 != null && tp2 != null) {
+        		if (!T(hitbox, tp1.box) && !T(hitbox, tp2.box)) {
+        			teleported = false;
+        		}
+        	}
         	if (sprinting) {
         		if (camera.getFieldOfView() < 51) {
         			camera.setFieldOfView(camera.getFieldOfView() + 2);
@@ -400,6 +428,9 @@ public class App extends Application {
         	boolean gotHit = false;
         	hitbox.setHeight(hitbox.getHeight());
         	for (Cube block : blocks) {
+        		if (block.texture.equals("teleport")) {
+        			continue;
+        		}
             	if (T(hitbox, block.box)) {
             		playerVelocity = 0;
             		gotHit = true;
@@ -465,20 +496,13 @@ public class App extends Application {
         						break;
         					}
         				}
-        				if (!godMode) {
-	        				int index = options.indexOf(selectedBlock);
-	        				if (!(numItems.get(index) > 0)) {
-	        					break;
-	        				}
-	        				
-	        				txts.get(index).reduce(1);
-	        				numItems.set(index, numItems.get(index) - 1);
-        				}
+        				
 	        			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() - 25);
 	//        			temp.setTexture("file:/C:/Users/shunm/Force.png");
 	        			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
 	        			
 	        			if (T(temp.box, hitbox)) {
+	        				
 	        				root.getChildren().remove(temp.box);
 	        	            App.root.getChildren().remove(temp.f.r);
 	        	            App.root.getChildren().remove(temp.b.r);
@@ -488,6 +512,22 @@ public class App extends Application {
 	        	            App.root.getChildren().remove(temp.d.r);
 	        			}
 	        			else {
+	        				if (!godMode) {
+		        				int index = options.indexOf(selectedBlock);
+		        				if (!(numItems.get(index) > 0)) {
+		        					root.getChildren().remove(temp.box);
+			        	            App.root.getChildren().remove(temp.f.r);
+			        	            App.root.getChildren().remove(temp.b.r);
+			        	            App.root.getChildren().remove(temp.l.r);
+			        	            App.root.getChildren().remove(temp.r.r);
+			        	            App.root.getChildren().remove(temp.u.r);
+			        	            App.root.getChildren().remove(temp.d.r);
+		        					break;
+		        				}
+		        				
+		        				txts.get(index).reduce(1);
+		        				numItems.set(index, numItems.get(index) - 1);
+	        				}
 	        				temp.setTexture(selectedBlock);
 	        				blocks.add(temp);
 	        				map.put(p, selectedBlock);
@@ -530,15 +570,7 @@ public class App extends Application {
         						break;
         					}
         				}
-        				if (!godMode) {
-	        				int index = options.indexOf(selectedBlock);
-	        				if (!(numItems.get(index) > 0)) {
-	        					break;
-	        				}
-	        			
-	        				txts.get(index).reduce(1);
-	        				numItems.set(index, numItems.get(index) - 1);
-        				}
+        				
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ() + 25);
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -552,6 +584,22 @@ public class App extends Application {
         	            App.root.getChildren().remove(temp.d.r);
         			}
         			else {
+        				if (!godMode) {
+	        				int index = options.indexOf(selectedBlock);
+	        				if (!(numItems.get(index) > 0)) {
+	        					root.getChildren().remove(temp.box);
+		        	            App.root.getChildren().remove(temp.f.r);
+		        	            App.root.getChildren().remove(temp.b.r);
+		        	            App.root.getChildren().remove(temp.l.r);
+		        	            App.root.getChildren().remove(temp.r.r);
+		        	            App.root.getChildren().remove(temp.u.r);
+		        	            App.root.getChildren().remove(temp.d.r);
+	        					break;
+	        				}
+	        			
+	        				txts.get(index).reduce(1);
+	        				numItems.set(index, numItems.get(index) - 1);
+        				}
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
@@ -591,15 +639,7 @@ public class App extends Application {
         						break;
         					}
         				}
-        				if (!godMode) {
-	        				int index = options.indexOf(selectedBlock);
-	        				if (!(numItems.get(index) > 0)) {
-	        					break;
-	        				}
-	        			
-	        				txts.get(index).reduce(1);
-	        				numItems.set(index, numItems.get(index) - 1);
-        				}
+        				
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()-25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -613,6 +653,22 @@ public class App extends Application {
         	            App.root.getChildren().remove(temp.d.r);
         			}
         			else {
+        				if (!godMode) {
+	        				int index = options.indexOf(selectedBlock);
+	        				if (!(numItems.get(index) > 0)) {
+	        					root.getChildren().remove(temp.box);
+		        	            App.root.getChildren().remove(temp.f.r);
+		        	            App.root.getChildren().remove(temp.b.r);
+		        	            App.root.getChildren().remove(temp.l.r);
+		        	            App.root.getChildren().remove(temp.r.r);
+		        	            App.root.getChildren().remove(temp.u.r);
+		        	            App.root.getChildren().remove(temp.d.r);
+	        					break;
+	        				}
+	        			
+	        				txts.get(index).reduce(1);
+	        				numItems.set(index, numItems.get(index) - 1);
+        				}
 //        				System.out.println("2");
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
@@ -653,15 +709,7 @@ public class App extends Application {
         						break;
         					}
         				}
-        				if (!godMode) {
-	        				int index = options.indexOf(selectedBlock);
-	        				if (!(numItems.get(index) > 0)) {
-	        					break;
-	        				}
-	        			
-	        				txts.get(index).reduce(1);
-	        				numItems.set(index, numItems.get(index) - 1);
-        				}
+        				
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()+25), (float)fs.get(i).c.box.getTranslateY(), (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -675,6 +723,22 @@ public class App extends Application {
         	            App.root.getChildren().remove(temp.d.r);
         			}
         			else {
+        				if (!godMode) {
+	        				int index = options.indexOf(selectedBlock);
+	        				if (!(numItems.get(index) > 0)) {
+	        					root.getChildren().remove(temp.box);
+		        	            App.root.getChildren().remove(temp.f.r);
+		        	            App.root.getChildren().remove(temp.b.r);
+		        	            App.root.getChildren().remove(temp.l.r);
+		        	            App.root.getChildren().remove(temp.r.r);
+		        	            App.root.getChildren().remove(temp.u.r);
+		        	            App.root.getChildren().remove(temp.d.r);
+	        					break;
+	        				}
+	        			
+	        				txts.get(index).reduce(1);
+	        				numItems.set(index, numItems.get(index) - 1);
+        				}
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
@@ -714,15 +778,7 @@ public class App extends Application {
         						break;
         					}
         				}
-        				if (!godMode) {
-	        				int index = options.indexOf(selectedBlock);
-	        				if (!(numItems.get(index) > 0)) {
-	        					break;
-	        				}
-	        			
-	        				txts.get(index).reduce(1);
-	        				numItems.set(index, numItems.get(index) - 1);
-        				}
+        				
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()-25, (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -737,7 +793,22 @@ public class App extends Application {
         			}
         			else {
         				temp.setTexture(selectedBlock);
-        				
+        				if (!godMode) {
+	        				int index = options.indexOf(selectedBlock);
+	        				if (!(numItems.get(index) > 0)) {
+	        					root.getChildren().remove(temp.box);
+		        	            App.root.getChildren().remove(temp.f.r);
+		        	            App.root.getChildren().remove(temp.b.r);
+		        	            App.root.getChildren().remove(temp.l.r);
+		        	            App.root.getChildren().remove(temp.r.r);
+		        	            App.root.getChildren().remove(temp.u.r);
+		        	            App.root.getChildren().remove(temp.d.r);
+	        					break;
+	        				}
+	        			
+	        				txts.get(index).reduce(1);
+	        				numItems.set(index, numItems.get(index) - 1);
+        				}
         				blocks.add(temp);
         				map.put(p, selectedBlock);
         				
@@ -776,15 +847,7 @@ public class App extends Application {
         						break;
         					}
         				}
-        				if (!godMode) {
-	        				int index = options.indexOf(selectedBlock);
-	        				if (!(numItems.get(index) > 0)) {
-	        					break;
-	        				}
-	        			
-	        				txts.get(index).reduce(1);
-	        				numItems.set(index, numItems.get(index) - 1);
-        				}
+        				
         			Cube temp = new Cube(25F, 25F, 25F, (float)(fs.get(i).c.box.getTranslateX()), (float)fs.get(i).c.box.getTranslateY()+25, (float)fs.get(i).c.box.getTranslateZ());
 //        			temp.setTexture("file:/C:/Users/shunm/Force.png");
         			Point3DKey p = new Point3DKey(temp.box.getTranslateX()/25, temp.box.getTranslateY()/25, temp.box.getTranslateZ()/25);
@@ -798,6 +861,22 @@ public class App extends Application {
         	            App.root.getChildren().remove(temp.d.r);
         			}
         			else {
+        				if (!godMode) {
+	        				int index = options.indexOf(selectedBlock);
+	        				if (!(numItems.get(index) > 0)) {
+	        					root.getChildren().remove(temp.box);
+		        	            App.root.getChildren().remove(temp.f.r);
+		        	            App.root.getChildren().remove(temp.b.r);
+		        	            App.root.getChildren().remove(temp.l.r);
+		        	            App.root.getChildren().remove(temp.r.r);
+		        	            App.root.getChildren().remove(temp.u.r);
+		        	            App.root.getChildren().remove(temp.d.r);
+	        					break;
+	        				}
+	        			
+	        				txts.get(index).reduce(1);
+	        				numItems.set(index, numItems.get(index) - 1);
+        				}
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
@@ -869,6 +948,9 @@ public class App extends Application {
     	inv = new ArrayList<FlatRect>();
     	numItems = new ArrayList<Integer>();
     	options = new ArrayList<String>();
+    	txts = new ArrayList<FlatText>();
+    	tp1 = null;
+    	tp2 = null;
     	reach = 8;
     }
     private void setupMovement(Scene scene, PerspectiveCamera camera, Stage primaryStage) {
@@ -1153,6 +1235,9 @@ public class App extends Application {
         boolean gotHit = false;
         
         for (Cube block : blocks) {
+        	if (block.texture.equals("teleport")) {
+        		continue;
+        	}
         	if (T(hitbox, block.box)) {
             	gotHit = true;
                 break;
@@ -1435,6 +1520,13 @@ class Cube {
             this.box.setMaterial(m);
         }
         else if (path.equals("teleport")) {
+        	if (App.tp1 == null) {
+        		App.tp1 = this;
+        		
+        	}
+        	else if (App.tp2 == null) {
+        		App.tp2 = this;
+        	}
         	m.setDiffuseMap(teleport);
             this.box.setMaterial(m);
         }
