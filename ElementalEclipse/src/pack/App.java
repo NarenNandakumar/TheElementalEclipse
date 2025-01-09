@@ -185,6 +185,7 @@ public class App extends Application {
                 Image sand = new Image("file:Textures/sand.png");
                 Image grass = new Image("file:Textures/grass.png");
                 Image metal = new Image("file:Textures/metal.png");
+                Image circuit = new Image("file:Textures/circuit.png");
                 while ((line = br.readLine()) != null) {
                     String[] values = line.split(",");
                     if (values.length == 5) { 
@@ -303,6 +304,12 @@ public class App extends Application {
                             	
                             	temp.r.setFill(new ImagePattern(metal));
                             	options.add("metal");
+                            	inv.add(temp);
+                            }
+                            else if (block.equals("circuit")) {
+                            	
+                            	temp.r.setFill(new ImagePattern(circuit));
+                            	options.add("circuit");
                             	inv.add(temp);
                             }
                             if (slots.size() == 0) {
@@ -1437,6 +1444,7 @@ class Cube {
 	static Image sand = new Image("file:Textures/sand.png");
 	static Image grass = new Image("file:Textures/grass.png");
 	static Image metal = new Image("file:Textures/metal.png");
+	static Image circuit = new Image("file:Textures/circuit.png");
 	int opacity = 00;
 	boolean breakable;
 	PhongMaterial m;
@@ -1589,6 +1597,10 @@ class Cube {
         }
         else if (path.equals("metal")) {
         	m.setDiffuseMap(metal);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("circuit")) {
+        	m.setDiffuseMap(circuit);
             this.box.setMaterial(m);
         }
         else if (path.equals("teleport")) {
