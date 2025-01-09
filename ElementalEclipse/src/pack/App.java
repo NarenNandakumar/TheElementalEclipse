@@ -110,7 +110,7 @@ public class App extends Application {
     static boolean sprinting = false;
     static boolean teleported = false;
     static ArrayList<FlatText> txts = new ArrayList<FlatText>();
-    static boolean godMode = false;
+    static boolean godMode = true;
     static ArrayList<Cube> teleporters = new ArrayList<Cube>();
 //    static int waiter = 0;
     public App() throws AWTException {
@@ -181,6 +181,9 @@ public class App extends Application {
                 Image fireBrick = new Image("file:Textures/fireBrick.png");
                 Image waterBrick = new Image("file:Textures/waterBrick.png");
                 Image teleport = new Image("file:Textures/teleport.png");
+                Image wood = new Image("file:Textures/wood.png");
+                Image sand = new Image("file:Textures/sand.png");
+                Image grass = new Image("file:Textures/grass.png");
                 while ((line = br.readLine()) != null) {
                     String[] values = line.split(",");
                     if (values.length == 5) { 
@@ -275,6 +278,24 @@ public class App extends Application {
                             	
                             	temp.r.setFill(new ImagePattern(teleport));
                             	options.add("teleport");
+                            	inv.add(temp);
+                            }
+                            else if (block.equals("wood")) {
+                            	
+                            	temp.r.setFill(new ImagePattern(wood));
+                            	options.add("wood");
+                            	inv.add(temp);
+                            }
+                            else if (block.equals("sand")) {
+                            	
+                            	temp.r.setFill(new ImagePattern(sand));
+                            	options.add("sand");
+                            	inv.add(temp);
+                            }
+                            else if (block.equals("grass")) {
+                            	
+                            	temp.r.setFill(new ImagePattern(grass));
+                            	options.add("grass");
                             	inv.add(temp);
                             }
                             if (slots.size() == 0) {
@@ -548,11 +569,14 @@ public class App extends Application {
         				
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
-        					if (pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) {
+        					String t = fs.get(i).c.texture;
+        					if ((pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) && !options.contains(t)) {
         						break;
         					}
-        					String t = fs.get(i).c.texture;
         					int index = options.indexOf(t);
+        					if (index == -1) {
+        						break;
+        					}
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
@@ -617,11 +641,14 @@ public class App extends Application {
         			else {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
-        					if (pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) {
+        					String t = fs.get(i).c.texture;
+        					if ((pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) && !options.contains(t)) {
         						break;
         					}
-        					String t = fs.get(i).c.texture;
         					int index = options.indexOf(t);
+        					if (index == -1) {
+        						break;
+        					}
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
@@ -687,11 +714,14 @@ public class App extends Application {
         			else {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
-        					if (pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) {
+        					String t = fs.get(i).c.texture;
+        					if ((pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) && !options.contains(t)) {
         						break;
         					}
-        					String t = fs.get(i).c.texture;
         					int index = options.indexOf(t);
+        					if (index == -1) {
+        						break;
+        					}
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
@@ -756,11 +786,14 @@ public class App extends Application {
         			else {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
-        					if (pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) {
+        					String t = fs.get(i).c.texture;
+        					if ((pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) && !options.contains(t)) {
         						break;
         					}
-        					String t = fs.get(i).c.texture;
         					int index = options.indexOf(t);
+        					if (index == -1) {
+        						break;
+        					}
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
@@ -825,11 +858,14 @@ public class App extends Application {
         			else {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
-        					if (pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) {
+        					String t = fs.get(i).c.texture;
+        					if ((pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) && !options.contains(t)) {
         						break;
         					}
-        					String t = fs.get(i).c.texture;
         					int index = options.indexOf(t);
+        					if (index == -1) {
+        						break;
+        					}
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
@@ -894,11 +930,14 @@ public class App extends Application {
         			else {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
-        					if (pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) {
+        					String t = fs.get(i).c.texture;
+        					if ((pickResult.getIntersectedDistance() > j || !fs.get(i).c.breakable) && !options.contains(t)) {
         						break;
         					}
-        					String t = fs.get(i).c.texture;
         					int index = options.indexOf(t);
+        					if (index == -1) {
+        						break;
+        					}
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
@@ -1387,6 +1426,9 @@ class Cube {
 	static Image fireBrick = new Image("file:Textures/fireBrick.png");
 	static Image waterBrick = new Image("file:Textures/waterBrick.png");
 	static Image teleport = new Image("file:Textures/teleport.png");
+	static Image wood = new Image("file:Textures/wood.png");
+	static Image sand = new Image("file:Textures/sand.png");
+	static Image grass = new Image("file:Textures/grass.png");
 	int opacity = 00;
 	boolean breakable;
 	PhongMaterial m;
@@ -1523,6 +1565,18 @@ class Cube {
         }
         else if (path.equals("waterBrick")) {
         	m.setDiffuseMap(waterBrick);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("wood")) {
+        	m.setDiffuseMap(wood);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("sand")) {
+        	m.setDiffuseMap(sand);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("grass")) {
+        	m.setDiffuseMap(grass);
             this.box.setMaterial(m);
         }
         else if (path.equals("teleport")) {
