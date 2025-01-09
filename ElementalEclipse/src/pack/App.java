@@ -89,7 +89,7 @@ public class App extends Application {
     static int selectedSlot = 0;
     static String selectedBlock = "";
     static ArrayList<String> options = new ArrayList<String>();
-    static boolean godMode = false;
+    
     static double playerVelocity = 0;
     static boolean sneaking = false;
     static Cube standOn;
@@ -110,8 +110,8 @@ public class App extends Application {
     static boolean sprinting = false;
     static boolean teleported = false;
     static ArrayList<FlatText> txts = new ArrayList<FlatText>();
-    static Cube tp1 = null;
-    static Cube tp2 = null;
+    static boolean godMode = false;
+    static ArrayList<Cube> teleporters = new ArrayList<Cube>();
 //    static int waiter = 0;
     public App() throws AWTException {
         robot = new Robot();
@@ -310,32 +310,39 @@ public class App extends Application {
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
         Timeline gen = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-        	if (tp1 != null) {
-        			if (T(hitbox, tp1.box) && !teleported) { 
-                		if (tp2 != null) {
-                			camera.setTranslateX(tp2.box.getTranslateX());
-                			camera.setTranslateZ(tp2.box.getTranslateZ());
-                			camera.setTranslateY(tp2.box.getTranslateY() - 101);
-                			teleported = true;
-                		}
-                	}
-//        		}
-        	}
-        	if (tp2 != null) {
-    			if (T(hitbox, tp2.box) && !teleported) { 
+        	
+        	if (teleporters.size() % 2 == 0) {
+        		for (int i = 0; i < teleporters.size(); i+=2) {
+            		Cube tp1 = teleporters.get(i);
+            		Cube tp2 = teleporters.get(i+1);
             		if (tp1 != null) {
-            			camera.setTranslateX(tp1.box.getTranslateX());
-            			camera.setTranslateZ(tp1.box.getTranslateZ());
-            			camera.setTranslateY(tp1.box.getTranslateY() - 101);
-            			teleported = true;
+            			if (T(hitbox, tp1.box)) { 
+                    		if (tp2 != null) {
+                    			camera.setTranslateX(tp2.box.getTranslateX());
+                    			camera.setTranslateZ(tp2.box.getTranslateZ());
+                    			camera.setTranslateY(tp2.box.getTranslateY() - 95);
+                    			
+                    		}
+                    	}
             		}
+            		if (tp2 != null) {
+            			if (T(hitbox, tp2.box)) { 
+            				if (tp1 != null) {
+            					camera.setTranslateX(tp1.box.getTranslateX());
+            					camera.setTranslateZ(tp1.box.getTranslateZ());
+            					camera.setTranslateY(tp1.box.getTranslateY() - 95);
+            					
+            				}
+            			}
+            		}	  
             	}
-    	}       	
-        	if (tp1 != null && tp2 != null) {
-        		if (!T(hitbox, tp1.box) && !T(hitbox, tp2.box)) {
-        			teleported = false;
-        		}
         	}
+        	
+//        	if (tp1 != null && tp2 != null) {
+//        		if (!T(hitbox, tp1.box) && !T(hitbox, tp2.box)) {
+//        			teleported = false;
+//        		}
+//        	}
         	if (sprinting) {
         		if (camera.getFieldOfView() < 51) {
         			camera.setFieldOfView(camera.getFieldOfView() + 2);
@@ -949,8 +956,7 @@ public class App extends Application {
     	numItems = new ArrayList<Integer>();
     	options = new ArrayList<String>();
     	txts = new ArrayList<FlatText>();
-    	tp1 = null;
-    	tp2 = null;
+    	teleporters = new ArrayList<Cube>();
     	reach = 8;
     }
     private void setupMovement(Scene scene, PerspectiveCamera camera, Stage primaryStage) {
@@ -1520,13 +1526,14 @@ class Cube {
             this.box.setMaterial(m);
         }
         else if (path.equals("teleport")) {
-        	if (App.tp1 == null) {
-        		App.tp1 = this;
-        		
-        	}
-        	else if (App.tp2 == null) {
-        		App.tp2 = this;
-        	}
+//        	if (App.tp1 == null) {
+//        		App.tp1 = this;
+//        		
+//        	}
+//        	else if (App.tp2 == null) {
+//        		App.tp2 = this;
+//        	}
+        	App.teleporters.add(this);
         	m.setDiffuseMap(teleport);
             this.box.setMaterial(m);
         }
