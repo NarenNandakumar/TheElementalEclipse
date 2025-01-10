@@ -1527,6 +1527,7 @@ public class App extends Application {
     }
 }
 class Cube {
+	double vel = 0;
 	Box box;
 	Rect f;
 	Rect b;
@@ -1713,19 +1714,29 @@ class Cube {
 //        	box.setDepthTest(DepthTest.DISABLE);
         	
         	Timeline down = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-        		box.setTranslateY(box.getTranslateY() + 1) ;
-        		boolean hit = false;
-        		for (Cube block : App.blocks) {	
-        			
-        			if ((TT(box, block.box) && block.movable == false) || TT(box, App.hitbox)) {
-        				hit = true;
-        				break;
-        			}
-        		}
-        		if (hit) {
-        			box.setTranslateY(box.getTranslateY() - 1) ;
-        		}
-        		
+        	    vel += 0.06; // Increase velocity due to gravity
+        	    boolean hit = false;
+
+        	    // Temporarily move the box down
+        	    App.hitbox.setTranslateY(App.hitbox.getTranslateY() - 10);
+        	    double newY = box.getTranslateY() + vel;
+        	    box.setTranslateY(newY);
+
+        	    // Check for collisions
+        	    for (Cube block : App.blocks) {
+        	        if ((TT(box, block.box) && !block.movable) || TT(box, App.hitbox)) {
+        	            hit = true;
+        	            break;
+        	        }
+        	    }
+
+        	    if (hit) {
+        	        // Revert position and stop movement
+        	        box.setTranslateY(box.getTranslateY() - vel);
+        	        vel = 0;
+        	    }
+        	    App.hitbox.setTranslateY(App.hitbox.getTranslateY() + 10);
+        	    // No collision, keep the box in the new position
         	}));
         	box.setOnMouseClicked(e -> {
         		if (e.getButton() == MouseButton.PRIMARY) { 
