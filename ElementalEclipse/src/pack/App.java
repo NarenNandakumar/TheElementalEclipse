@@ -6,6 +6,7 @@ import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Point3D;
 import javafx.scene.AmbientLight;
@@ -53,7 +54,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class App extends Application {
-	Box hitbox = new Box(15, 50, 15);
+	static Box hitbox = new Box(15, 50, 15);
     public static Group root = new Group();
     private static double cameraRotationAngleX = 0;
     private static double cameraRotationAngleY = 0;
@@ -83,7 +84,7 @@ public class App extends Application {
     private static long lastTime = System.nanoTime();
     static String gameStage = "Menu";
     static String element = "wind";
-    Map<Point3DKey, String> map = new HashMap<>();
+    static Map<Point3DKey, String> map = new HashMap<>();
     
     static ArrayList<FlatRect> slots = new ArrayList<FlatRect>();
     static int selectedSlot = 0;
@@ -137,6 +138,25 @@ public class App extends Application {
 //    		);
 //    		warmUp.setCycleCount(10); // Run this for 10 frames
 //    		warmUp.play();
+    	try (BufferedReader br = new BufferedReader(new FileReader("Maps/windtp.csv"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                if (values.length == 3) {  
+                    Cube y = new Cube(25F, 25F, 25F, Float.parseFloat(values[0])*25, Float.parseFloat(values[1])*25, Float.parseFloat(values[2]) * 25);
+                    teleporters.add(y);
+                    App.root.getChildren().remove(y.box);
+                    App.root.getChildren().remove(y.f.r);
+                    App.root.getChildren().remove(y.b.r);
+                    App.root.getChildren().remove(y.l.r);
+                    App.root.getChildren().remove(y.r.r);
+                    App.root.getChildren().remove(y.u.r);
+                    App.root.getChildren().remove(y.d.r);
+                }
+            }
+        } catch (IOException e) {
+        }
+    	
     	if (element.equals("wind")) {
     		for (int i = 0; i < 10; i++) {
     			numItems.add(10);
@@ -406,17 +426,36 @@ public class App extends Application {
             		}
             	}
         	});
-        	if (camera.getTranslateY() >= 300) {
-        		if (scene.getFill() == Color.DARKSLATEGRAY) {
-        			scene.setFill(Color.RED);
+        	Color v = Color.LIGHTSKYBLUE;
+        	double lowest = 9999;
+        	for (Cube g : teleporters) {
+        		double distance = Math.sqrt(Math.pow(hitbox.getTranslateX() - g.box.getTranslateX(), 2) + Math.pow(hitbox.getTranslateY() - g.box.getTranslateY(), 2) + Math.pow(hitbox.getTranslateZ() - g.box.getTranslateZ(), 2));
+        		if (distance < lowest) {
+        			lowest = distance;
         		}
-        		else {
-        			scene.setFill(Color.DARKSLATEGRAY);
-        		}
+        		
         	}
-        	else {
-    			scene.setFill(Color.DARKSLATEGRAY);
+        	
+        	if (lowest < 250) {
+    			
+    			double factor = lowest/250;
+            	Color darkerColor = new Color(v.getRed(), v.getGreen() * factor, v.getBlue() * factor, v.getOpacity());
+            	scene.setFill(darkerColor);
     		}
+        	else {
+        		scene.setFill(v);
+        	}
+//        	if (camera.getTranslateY() >= 300) {
+//        		if (scene.getFill() == Color.DARKSLATEGRAY) {
+//        			scene.setFill(Color.RED);
+//        		}
+//        		else {
+//        			scene.setFill(Color.DARKSLATEGRAY);
+//        		}
+//        	}
+//        	else {
+//    			scene.setFill(Color.DARKSLATEGRAY);
+//    		}
         	if (sneaker) {
         		
         		hitbox.setTranslateY(hitbox.getTranslateY() - 20);
@@ -509,6 +548,7 @@ public class App extends Application {
         	motion.play();
         }
         scene.setOnMouseMoved(event -> {
+        	
                 double deltaX = event.getScreenX() - (scene.getWidth() / 2);
                 double deltaY = event.getScreenY() - (scene.getHeight() / 2);
 
@@ -525,6 +565,7 @@ public class App extends Application {
         });
         scene.setOnMousePressed(e -> {
 //        	 System.out.println(root.getChildren().size());
+        	System.out.println(teleporters.size());
         	var r = e.getPickResult().getIntersectedNode();
         	e.getPickResult().getIntersectedFace();
         	
@@ -566,13 +607,16 @@ public class App extends Application {
 			        	            App.root.getChildren().remove(temp.d.r);
 		        					break;
 		        				}
-		        				
+                                
 		        				txts.get(index).reduce(1);
 		        				numItems.set(index, numItems.get(index) - 1);
 	        				}
 	        				temp.setTexture(selectedBlock);
 	        				blocks.add(temp);
 	        				map.put(p, selectedBlock);
+	        				if (selectedBlock.equals("teleport")) {
+	        					teleporters.add(temp);
+	        				}
 	        				
 	        			       
 	        			}
@@ -594,6 +638,7 @@ public class App extends Application {
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
+        				
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -648,7 +693,9 @@ public class App extends Application {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
-        				
+        				if (selectedBlock.equals("teleport")) {
+        					teleporters.add(temp);
+        				}
         			}
         			
         			}
@@ -721,7 +768,9 @@ public class App extends Application {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
-        				
+        				if (selectedBlock.equals("teleport")) {
+        					teleporters.add(temp);
+        				}
         			}
         			
         			}
@@ -793,7 +842,9 @@ public class App extends Application {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
-        				
+        				if (selectedBlock.equals("teleport")) {
+        					teleporters.add(temp);
+        				}
         			}
         			
         			}
@@ -865,7 +916,9 @@ public class App extends Application {
         				}
         				blocks.add(temp);
         				map.put(p, selectedBlock);
-        				
+        				if (selectedBlock.equals("teleport")) {
+        					teleporters.add(temp);
+        				}
         			}
         			
         			}
@@ -937,7 +990,9 @@ public class App extends Application {
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
-        				
+        				if (selectedBlock.equals("teleport")) {
+        					teleporters.add(temp);
+        				}
         			}
         			
         			}
@@ -976,7 +1031,7 @@ public class App extends Application {
     public void start(Stage primaryStage) throws Exception {
     	
     	
-    	scene.setFill(Color.DARKSLATEGRAY);
+    	scene.setFill(Color.LIGHTSKYBLUE);
         scene.setCamera(camera);
         
 //        b.setTranslateY(100);
@@ -1125,7 +1180,8 @@ public class App extends Application {
             	camera.setTranslateY(-spawnY * 25);
             	camera.setTranslateX(spawnX);
             	camera.setTranslateZ(spawnZ);
-            	scene.setFill(Color.DARKSLATEGRAY);
+            	
+            	scene.setFill(Color.LIGHTSKYBLUE);
             	playerVelocity = 0;
             }
             if (e.getCode() == KeyCode.SHIFT) {
@@ -1152,6 +1208,20 @@ public class App extends Application {
 	    				}		
 	    			    bw.flush();
 	    			    bw.close();
+	    			} catch (IOException e1) {
+	    				// TODO Auto-generated catch block
+	    				e1.printStackTrace();
+	    			}
+	    			
+	    			BufferedWriter bb;
+	    			try {
+	    				bb = new BufferedWriter(new FileWriter("Maps/windtp.csv", false));
+	    				for (Cube c : teleporters) {
+	    					String wr = Double.toString(c.box.getTranslateX()/25) + "," + Double.toString(c.box.getTranslateY()/25) + "," + Double.toString(c.box.getTranslateZ()/25);
+	    				    bb.write("\n" + wr);
+	    				}		
+	    			    bb.flush();
+	    			    bb.close();
 	    			} catch (IOException e1) {
 	    				// TODO Auto-generated catch block
 	    				e1.printStackTrace();
@@ -1297,9 +1367,36 @@ public class App extends Application {
         	if (block.texture.equals("teleport")) {
         		continue;
         	}
-        	if (T(hitbox, block.box)) {
-            	gotHit = true;
-                break;
+        	if (Cube.TT(hitbox, block.box)) {
+        		if (!block.movable) {
+        			gotHit = true;
+                    break;
+        		}
+        		else {
+        			double tx = block.box.getTranslateX();
+        			double tz = block.box.getTranslateZ(); 
+        			block.box.setTranslateX(block.box.getTranslateX() + (deltaX * rightX + deltaZ * forwardX));
+        			block.box.setTranslateZ(block.box.getTranslateZ() + (deltaX * rightZ + deltaZ * forwardZ));
+//        			block.box.setTranslateY(block.box.getTranslateY() - 1);
+        			boolean free = true;
+//        			blocks.remove(block);
+        			for (Cube b: blocks) {
+        				if (Cube.TT(block.box, b.box) && !b.movable) {
+        					free = false;
+        					break;
+        				}
+        			}
+//        			block.box.setTranslateY(block.box.getTranslateY() + 1);   			       			
+        			if (!free) {
+        				block.box.setTranslateX(tx);
+        				block.box.setTranslateZ(tz);
+        				gotHit = true;
+//        				block.movable = false;
+                        break;
+        			}
+//        			blocks.add(block);
+        		}
+        		
             }
             
         }
@@ -1315,7 +1412,7 @@ public class App extends Application {
             		boolean onTop = false;
             		for (Cube block: blocks) {
             			hitbox.setTranslateY(hitbox.getTranslateY() + 10);
-            			if (T(block.box, hitbox)) {
+            			if (T(block.box, hitbox) && !block.movable) {
             				onTop = true;
             				hitbox.setTranslateY(hitbox.getTranslateY() - 10);
             				break;
@@ -1447,9 +1544,11 @@ class Cube {
 	static Image circuit = new Image("file:Textures/circuit.png");
 	int opacity = 00;
 	boolean breakable;
+	boolean movable;
 	PhongMaterial m;
 	String texture;
 	public Cube(float length, float width, float height, float x, float y, float z) {
+		movable = false;
 		breakable = true;
 		m = new PhongMaterial();
 		box = new Box(length, width, height);
@@ -1596,6 +1695,45 @@ class Cube {
             this.box.setMaterial(m);
         }
         else if (path.equals("metal")) {
+        	breakable = false;
+        	movable = true;
+        	App.root.getChildren().remove(f.r);
+        	App.root.getChildren().remove(b.r);
+        	App.root.getChildren().remove(l.r);
+        	App.root.getChildren().remove(r.r);
+        	App.root.getChildren().remove(u.r);
+        	App.root.getChildren().remove(d.r);
+//        	box.setDepthTest(DepthTest.DISABLE);
+        	
+        	Timeline down = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+        		box.setTranslateY(box.getTranslateY() + 1) ;
+        		boolean hit = false;
+        		for (Cube block : App.blocks) {	
+        			
+        			if ((TT(box, block.box) && block.movable == false) || TT(box, App.hitbox)) {
+        				hit = true;
+        				break;
+        			}
+        		}
+        		if (hit) {
+        			box.setTranslateY(box.getTranslateY() - 1) ;
+        		}
+        		
+        	}));
+        	box.setOnMouseClicked(e -> {
+        		if (e.getButton() == MouseButton.PRIMARY) { 
+        			if (App.godMode) {
+        				App.blocks.remove(this);
+                		Point3DKey h = new Point3DKey(box.getTranslateX()/25, box.getTranslateY()/25, box.getTranslateZ()/25);
+            			App.map.remove(h);
+                		App.root.getChildren().remove(box);
+        			}
+        			
+        		}
+        		
+        	});
+        	down.setCycleCount(Timeline.INDEFINITE);
+        	down.play();
         	m.setDiffuseMap(metal);
             this.box.setMaterial(m);
         }
@@ -1612,50 +1750,35 @@ class Cube {
 //        	else if (App.tp2 == null) {
 //        		App.tp2 = this;
 //        	}
-        	App.teleporters.add(this);
+//        	App.teleporters.add(this);
         	m.setDiffuseMap(teleport);
             this.box.setMaterial(m);
         }
     }
-	public boolean isInFrustum() {
-		Box object = box;
-	    // Get object's position in world coordinates
-	    double objectWorldX = object.getTranslateX();
-	    double objectWorldY = object.getTranslateY();
-	    double objectWorldZ = object.getTranslateZ();
-
-	    // Transform to camera space
-	    double cameraWorldX = App.camera.getTranslateX();
-	    double cameraWorldY = App.camera.getTranslateY();
-	    double cameraWorldZ = App.camera.getTranslateZ();
-
-	    // Relative position in camera space
-	    double cameraX = objectWorldX - cameraWorldX;
-	    double cameraY = objectWorldY - cameraWorldY;
-	    double cameraZ = objectWorldZ - cameraWorldZ;
-
-	    // Near and far clip checks (JavaFX uses negative Z for depth into the screen)
-	    double nearClip = App.camera.getNearClip();
-	    double farClip = App.camera.getFarClip();
-	    if (cameraZ > -nearClip || cameraZ < -farClip) {
-	        return false;
-	    }
-
-	    // Calculate aspect ratio of the scene
-	    double aspectRatio = App.scene.getWidth() / App.scene.getHeight();
-
-	    // Horizontal and vertical FOV calculations
-	    double horizontalFOV = Math.toRadians(App.camera.getFieldOfView());
-	    double verticalFOV = 2 * Math.atan(Math.tan(horizontalFOV / 2) / aspectRatio);
-
-	    // Frustum extents at the object's depth
-	    double halfWidthAtZ = -cameraZ * Math.tan(horizontalFOV / 2);
-	    double halfHeightAtZ = -cameraZ * Math.tan(verticalFOV / 2);
-
-	    // Check if the object is within the frustum bounds
-	    return (cameraX >= -halfWidthAtZ && cameraX <= halfWidthAtZ &&
-	            cameraY >= -halfHeightAtZ && cameraY <= halfHeightAtZ);
+	public void move() {
+		if (!movable) {
+			return;
+		}
+		
 	}
+	
+	public static boolean TT(Box box1, Box box2) {
+        // Get the bounds of both boxes
+        Bounds bounds1 = box1.getBoundsInParent();
+        Bounds bounds2 = box2.getBoundsInParent();
+
+        // Check for overlap in the x-axis
+        boolean overlapX = bounds1.getMinX() < bounds2.getMaxX() && bounds1.getMaxX() > bounds2.getMinX();
+
+        // Check for overlap in the y-axis
+        boolean overlapY = bounds1.getMinY() < bounds2.getMaxY() && bounds1.getMaxY() > bounds2.getMinY();
+
+        // Check for overlap in the z-axis
+        boolean overlapZ = bounds1.getMinZ() < bounds2.getMaxZ() && bounds1.getMaxZ() > bounds2.getMinZ();
+
+        // Return true if they overlap in all axes
+        return overlapX && overlapY && overlapZ;
+    }
 	public void unbreakable() {
 		breakable = false;
 	}
