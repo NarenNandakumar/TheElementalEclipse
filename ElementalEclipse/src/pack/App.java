@@ -117,6 +117,7 @@ public class App extends Application {
     public App() throws AWTException {
         robot = new Robot();
     }
+    
     public void setSpawn(int x, int y, int z) {
     	playerVelocity = 0;
     	spawnX = x;
