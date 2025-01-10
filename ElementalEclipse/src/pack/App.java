@@ -111,7 +111,7 @@ public class App extends Application {
     static boolean sprinting = false;
     static boolean teleported = false;
     static ArrayList<FlatText> txts = new ArrayList<FlatText>();
-    static boolean godMode = false;
+    static boolean godMode = true;
     static ArrayList<Cube> teleporters = new ArrayList<Cube>();
 //    static int waiter = 0;
     public App() throws AWTException {
