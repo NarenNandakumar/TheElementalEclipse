@@ -445,6 +445,12 @@ public class App extends Application {
         	else {
         		scene.setFill(v);
         	}
+        	
+        	if (camera.getTranslateY() > 300) {
+        		double factor = Math.max(0, Math.min(1, 1 - (camera.getTranslateY() - 500) / (2000 - 500)));
+            	Color darkerColor = new Color(v.getRed() * factor, v.getGreen() * factor, v.getBlue() * factor, v.getOpacity());
+            	scene.setFill(darkerColor);
+        	}
 //        	if (camera.getTranslateY() >= 300) {
 //        		if (scene.getFill() == Color.DARKSLATEGRAY) {
 //        			scene.setFill(Color.RED);
