@@ -52,7 +52,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
+import javafx.scene.media.AudioClip;
 public class App extends Application {
 	static Box hitbox = new Box(15, 50, 15);
     public static Group root = new Group();
@@ -159,8 +159,10 @@ public class App extends Application {
         }
     	
     	if (element.equals("wind")) {
-    		for (int i = 0; i < 10; i++) {
-    			numItems.add(10);
+    		
+    		numItems.add(70);
+    		for (int i = 0; i < 9; i++) {
+    			numItems.add(0);
     		}
     	}
     	setSpawn(0, 9, 0);
@@ -207,6 +209,7 @@ public class App extends Application {
                 Image grass = new Image("file:Textures/grass.png");
                 Image metal = new Image("file:Textures/metal.png");
                 Image circuit = new Image("file:Textures/circuit.png");
+                Image windBrick = new Image("file:Textures/windBrick.png");
                 while ((line = br.readLine()) != null) {
                     String[] values = line.split(",");
                     if (values.length == 5) { 
@@ -331,6 +334,12 @@ public class App extends Application {
                             	
                             	temp.r.setFill(new ImagePattern(circuit));
                             	options.add("circuit");
+                            	inv.add(temp);
+                            }
+                            else if (block.equals("windBrick")) {
+                            	
+                            	temp.r.setFill(new ImagePattern(windBrick));
+                            	options.add("windBrick");
                             	inv.add(temp);
                             }
                             if (slots.size() == 0) {
@@ -618,6 +627,7 @@ public class App extends Application {
 		        				txts.get(index).reduce(1);
 		        				numItems.set(index, numItems.get(index) - 1);
 	        				}
+	        				Sound.placeSound(selectedBlock);
 	        				temp.setTexture(selectedBlock);
 	        				blocks.add(temp);
 	        				map.put(p, selectedBlock);
@@ -645,7 +655,7 @@ public class App extends Application {
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
-        				
+        				Sound.breakSound(fs.get(i).c.texture);
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -697,6 +707,7 @@ public class App extends Application {
 	        				txts.get(index).reduce(1);
 	        				numItems.set(index, numItems.get(index) - 1);
         				}
+        				Sound.placeSound(selectedBlock);
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
@@ -720,6 +731,7 @@ public class App extends Application {
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
+        				Sound.breakSound(fs.get(i).c.texture);
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -772,6 +784,7 @@ public class App extends Application {
 	        				numItems.set(index, numItems.get(index) - 1);
         				}
 //        				System.out.println("2");
+        				Sound.placeSound(selectedBlock);
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
@@ -795,6 +808,7 @@ public class App extends Application {
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
+        				Sound.breakSound(fs.get(i).c.texture);
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -846,6 +860,7 @@ public class App extends Application {
 	        				txts.get(index).reduce(1);
 	        				numItems.set(index, numItems.get(index) - 1);
         				}
+        				Sound.placeSound(selectedBlock);
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
@@ -869,6 +884,7 @@ public class App extends Application {
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
+        				Sound.breakSound(fs.get(i).c.texture);
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -921,6 +937,7 @@ public class App extends Application {
 	        				txts.get(index).reduce(1);
 	        				numItems.set(index, numItems.get(index) - 1);
         				}
+        				Sound.placeSound(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
         				if (selectedBlock.equals("teleport")) {
@@ -943,6 +960,7 @@ public class App extends Application {
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
+        				Sound.breakSound(fs.get(i).c.texture);
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -994,6 +1012,7 @@ public class App extends Application {
 	        				txts.get(index).reduce(1);
 	        				numItems.set(index, numItems.get(index) - 1);
         				}
+        				Sound.placeSound(selectedBlock);
         				temp.setTexture(selectedBlock);
         				blocks.add(temp);
         				map.put(p, selectedBlock);
@@ -1017,6 +1036,7 @@ public class App extends Application {
         					txts.get(index).increase(1);
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
+        				Sound.breakSound(fs.get(i).c.texture);
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -1169,6 +1189,16 @@ public class App extends Application {
         	}
         });
         scene.setOnKeyPressed(e -> {
+        	if (e.getCode() == KeyCode.UP) { 
+        		if (camera.getFarClip() < 20000) {
+        			camera.setFarClip(camera.getFarClip() + 10);
+        		}
+        	}
+        	if (e.getCode() == KeyCode.DOWN) { 
+        		if (camera.getFarClip() > 1100) {
+        			camera.setFarClip(camera.getFarClip() - 10);
+        		}
+        	}
             if (e.getCode() == KeyCode.W) moveF.play();
             if (e.getCode() == KeyCode.D) moveR.play();
             if (e.getCode() == KeyCode.S) moveB.play();
@@ -1401,6 +1431,9 @@ public class App extends Application {
 //        				block.movable = false;
                         break;
         			}
+        			else {
+        				Sound.moveMetal();
+        			}
 //        			blocks.add(block);
         		}
         		
@@ -1550,6 +1583,7 @@ class Cube {
 	static Image grass = new Image("file:Textures/grass.png");
 	static Image metal = new Image("file:Textures/metal.png");
 	static Image circuit = new Image("file:Textures/circuit.png");
+	static Image windBrick = new Image("file:Textures/windBrick.png");
 	int opacity = 00;
 	boolean breakable;
 	boolean movable;
@@ -1700,6 +1734,10 @@ class Cube {
         }
         else if (path.equals("grass")) {
         	m.setDiffuseMap(grass);
+            this.box.setMaterial(m);
+        }
+        else if (path.equals("windBrick")) {
+        	m.setDiffuseMap(windBrick);
             this.box.setMaterial(m);
         }
         else if (path.equals("metal")) {
@@ -1959,4 +1997,41 @@ class Point3DKey {
     public int hashCode() {
         return Objects.hash(point.getX(), point.getY(), point.getZ());
     }
+}
+class Sound {
+	
+	public static void breakSound(String texture) {
+		if (texture.equals("windBrick")) {
+			AudioClip n = new AudioClip("file:Sounds/brickBreak.mp3");
+			n.play();
+		}
+		else if (texture.equals("wood")) {
+			AudioClip n = new AudioClip("file:Sounds/wood.mp3");
+			n.play();
+		}
+		else if (texture.equals("brick")) {
+			AudioClip n = new AudioClip("file:Sounds/brickBreak.mp3");
+			n.play();
+		}
+		else if (texture.equals("sand")) {
+			AudioClip n = new AudioClip("file:Sounds/sand.mp3");
+			
+			n.play();
+		}
+	}
+	public static void placeSound(String texture) {
+		if (texture.equals("wood")) {
+			AudioClip n = new AudioClip("file:Sounds/wood.mp3");
+			n.play();
+		}
+		else if (texture.equals("sand")) {
+			AudioClip n = new AudioClip("file:Sounds/sand.mp3");
+			n.play();
+		}
+	}
+	public static void moveMetal() {
+		AudioClip n = new AudioClip("file:Sounds/metal.mp3");
+		n.play();
+	}
+	
 }
