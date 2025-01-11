@@ -47,6 +47,8 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -113,6 +115,8 @@ public class App extends Application {
     static ArrayList<FlatText> txts = new ArrayList<FlatText>();
     static boolean godMode = false;
     static ArrayList<Cube> teleporters = new ArrayList<Cube>();
+    static double timeElapsed;
+    static FlatText time;
 //    static int waiter = 0;
     public App() throws AWTException {
         robot = new Robot();
@@ -361,6 +365,9 @@ public class App extends Application {
                     }
                     
                 }
+                FlatRect timer = new FlatRect(0.2,0.1,-0.45,-0.4);
+                time = new FlatText(70,70,-0.43,-0.34,"0");
+                time.t.setFill(Color.WHITE);
                 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -375,7 +382,11 @@ public class App extends Application {
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
         Timeline gen = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-        	
+        	timeElapsed += 0.01;
+        	BigDecimal bd = new BigDecimal(timeElapsed);
+        	bd.setScale(2, RoundingMode.HALF_UP);
+        	time.t.setText(Double.toString(bd.doubleValue()).substring(0,5));
+        	System.out.println(timeElapsed);
         	if (teleporters.size() % 2 == 0) {
         		for (int i = 0; i < teleporters.size(); i+=2) {
             		Cube tp1 = teleporters.get(i);
@@ -581,7 +592,7 @@ public class App extends Application {
         });
         scene.setOnMousePressed(e -> {
 //        	 System.out.println(root.getChildren().size());
-        	System.out.println(teleporters.size());
+//        	System.out.println(teleporters.size());
         	var r = e.getPickResult().getIntersectedNode();
         	e.getPickResult().getIntersectedFace();
         	
@@ -1946,6 +1957,38 @@ class FlatText {
 		t = new Text(Integer.toString(App.numItems.get(index)));
 		t.setTranslateZ(100);
 //		t.setCache(true);
+		t.setDepthTest(DepthTest.DISABLE);
+		App.root.getChildren().add(t);
+//		r.getTransforms().add(inv)
+		Rotate xt = new Rotate(0, Rotate.Y_AXIS);
+		Rotate yt = new Rotate(0, Rotate.X_AXIS);
+		t.getTransforms().addAll(xt, yt);
+		Timeline timer = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+			App.root.getChildren().remove(t);
+			xt.setAngle(App.cameraRX);
+			yt.setAngle(App.cameraRY);
+			Transform local = App.camera.getLocalToSceneTransform();
+			Point3D newlocal = local.transform(new Point3D(xp * screenWidth, yp * screenHeight, z));
+			t.setTranslateX(newlocal.getX());
+			t.setTranslateY(newlocal.getY());
+			t.setTranslateZ(newlocal.getZ());
+			App.root.getChildren().add(t);
+			
+		}));
+		timer.setCycleCount(Timeline.INDEFINITE);
+		timer.play();
+	}
+	public FlatText(double x, double y, double xp, double yp, String te) throws NonInvertibleTransformException {
+//		Transform inv = App.camera.getLocalToSceneTransform().createInverse();
+		// Create a rectangle
+		w = x;
+		h = y;
+		xxp = xp;
+		yyp = yp;
+		t = new Text(te);
+		t.setTranslateZ(100);
+//		t.setCache(true);
+		t.setText(te);
 		t.setDepthTest(DepthTest.DISABLE);
 		App.root.getChildren().add(t);
 //		r.getTransforms().add(inv)
