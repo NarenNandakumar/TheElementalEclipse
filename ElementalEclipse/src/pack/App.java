@@ -2003,6 +2003,7 @@ class Sound {
 	public static void breakSound(String texture) {
 		if (texture.equals("windBrick")) {
 			AudioClip n = new AudioClip("file:Sounds/brickBreak.mp3");
+			n.setVolume(100);
 			n.play();
 		}
 		else if (texture.equals("wood")) {
