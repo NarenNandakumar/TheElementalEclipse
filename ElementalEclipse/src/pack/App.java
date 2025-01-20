@@ -378,7 +378,7 @@ public class App extends Application {
                             }
                         
                         
-                        
+                          
                     }
                     
                 }
@@ -2180,7 +2180,7 @@ class Sound {
 		else if (texture.equals("sand")) {
 			AudioClip n = new AudioClip("file:Sounds/sand.mp3");
 			
-			n.play();
+			n.play(); 
 		}
 	}
 	public static void placeSound(String texture) {
