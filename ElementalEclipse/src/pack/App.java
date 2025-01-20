@@ -37,6 +37,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.transform.NonInvertibleTransformException;
 import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Scale;
 import javafx.scene.transform.Transform;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -44,6 +45,7 @@ import javafx.util.Duration;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -55,6 +57,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import javafx.scene.media.AudioClip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 public class App extends Application {
 	static Box hitbox = new Box(15, 50, 15);
     public static Group root = new Group();
@@ -117,11 +121,15 @@ public class App extends Application {
     static ArrayList<Cube> teleporters = new ArrayList<Cube>();
     static double timeElapsed;
     static FlatText time;
+    static FlatRect healthBar;
+    static int fallCounter;
+    static double maxHealth = 10;
+    static double health = 10;
 //    static int waiter = 0;
     public App() throws AWTException {
         robot = new Robot();
     }
-    
+//   
     public void setSpawn(int x, int y, int z) {
     	playerVelocity = 0;
     	spawnX = x;
@@ -136,6 +144,13 @@ public class App extends Application {
          camera.setTranslateZ(spawnZ * 25);
     }
     public void worldSet(String element, Stage primaryStage) throws NumberFormatException, NonInvertibleTransformException {
+//    	AudioClip n = new AudioClip("file:Sounds/rubedo.mp3");
+//		n.play();
+    	// Using a relative path with getClass().getResource()
+//    	Media media = new Media(new File("Sounds/rubedo.mp3").toURI().toString());
+//		MediaPlayer player1 = new MediaPlayer(media);
+//		player1.setCycleCount(MediaPlayer.INDEFINITE);
+//		player1.play();
 //    	Timeline warmUp = new Timeline(
 //    		    new KeyFrame(Duration.millis(100), e -> {
 //    		        
@@ -143,6 +158,7 @@ public class App extends Application {
 //    		);
 //    		warmUp.setCycleCount(10); // Run this for 10 frames
 //    		warmUp.play();
+    	
     	try (BufferedReader br = new BufferedReader(new FileReader("Maps/windtp.csv"))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -366,9 +382,17 @@ public class App extends Application {
                     
                 }
                 FlatRect timer = new FlatRect(0.2,0.1,-0.45,-0.4);
-                time = new FlatText(70,70,-0.43,-0.34,"0");
+                time = new FlatText(5,5,-0.43,-0.32,"0");
                 time.t.setFill(Color.WHITE);
-                
+                FlatRect healthBG = new FlatRect(10,0.12,0.19,-0.46);
+                healthBG.r.setOpacity(100);
+                FlatRect grayBar = new FlatRect(10,0.1,0.2,-0.45);
+                grayBar.setColor(Color.RED);
+                grayBar.r.setOpacity(100);
+                healthBar = new FlatRect(10,0.1,0.2,-0.45);
+                healthBar.r.setOpacity(100);
+                healthBar.setColor(Color.GREEN);
+               
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (NonInvertibleTransformException e1) {
@@ -382,11 +406,53 @@ public class App extends Application {
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
         Timeline gen = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-        	timeElapsed += 0.01;
-        	BigDecimal bd = new BigDecimal(timeElapsed);
-        	bd.setScale(2, RoundingMode.HALF_UP);
-        	time.t.setText(Double.toString(bd.doubleValue()).substring(0,5));
-        	System.out.println(timeElapsed);
+//        	if (fallCounter > 0) {
+//        		if (fallCounter < 5) {
+//        			healthBar.r.setOpacity(0);
+//        			fallCounter++;
+//        		}
+//        		else {
+//        			fallCounter = 0;
+//        			healthBar.r.setOpacity(0);
+//        		}
+//        	}
+        	
+        	if (camera.getTranslateY() > 500) {
+        		health -= camera.getTranslateY()/50000;
+        	}
+        	System.out.println(health);
+        	if (health < maxHealth) {
+        		health += 0.004;
+        	}
+        	else {
+        		health = maxHealth;
+        	}
+        	if (health < -1) {
+        		healthBar.setTranslateX(0.2);
+        		
+        		camera.setTranslateY(-spawnY * 25);
+            	camera.setTranslateX(spawnX);
+            	camera.setTranslateZ(spawnZ);
+            	timeElapsed += 30;
+            	scene.setFill(Color.LIGHTSKYBLUE);
+            	playerVelocity = 0;
+            	if (maxHealth > 2) {
+            		maxHealth -= 1;
+            	}
+            	
+            	health = maxHealth;
+        	}
+        	healthBar.setTranslateX(0.2 + (10 - health)/35);
+        	try {
+        		timeElapsed += 0.01;
+            	BigDecimal bd = new BigDecimal(timeElapsed);
+            	bd.setScale(2, RoundingMode.HALF_UP);
+            	time.t.setText(Double.toString(bd.doubleValue()).substring(0,6));
+        	}
+        	catch (Exception ex) {
+        		//pass;
+        	}
+//        	System.out.println(timeElapsed);
         	if (teleporters.size() % 2 == 0) {
         		for (int i = 0; i < teleporters.size(); i+=2) {
             		Cube tp1 = teleporters.get(i);
@@ -524,14 +590,12 @@ public class App extends Application {
         gen.setCycleCount(Timeline.INDEFINITE);
         gen.play();
         Timeline motion = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-        	
         	playerVelocity += 0.06;
         	hitbox.setHeight(50);
         	hitbox.setTranslateY(camera.getTranslateY() + playerVelocity + 25);
         	if (sneaking) {
         		hitbox.setHeight(35);
         		hitbox.setTranslateY(camera.getTranslateY() + playerVelocity + 17.5);
-        		
         	}
         	boolean gotHit = false;
         	hitbox.setHeight(hitbox.getHeight());
@@ -540,12 +604,18 @@ public class App extends Application {
         			continue;
         		}
             	if (T(hitbox, block.box)) {
+            		if (playerVelocity > 4) {
+            			health -= playerVelocity * 1.5;
+            			fallCounter = 1;
+            			
+            		}
+            		
             		playerVelocity = 0;
             		gotHit = true;
             		standOn = block;
+//            		System.out.println("here");
                     break;
-                }
-                
+                }   
             }
         	if (!gotHit) {
         		camera.setTranslateY(camera.getTranslateY() + playerVelocity);
@@ -1087,6 +1157,7 @@ public class App extends Application {
         worldSet("wind", primaryStage);
         
         
+        
     }
     public void deleteWorld() {
     	
@@ -1225,6 +1296,10 @@ public class App extends Application {
             }
             if (e.getCode() == KeyCode.O) deleteWorld(); 
             if (e.getCode() == KeyCode.R) { 
+            	if (maxHealth > 2) {
+            		maxHealth -= 2;
+            	}
+            	timeElapsed += 15;
             	camera.setTranslateY(-spawnY * 25);
             	camera.setTranslateX(spawnX);
             	camera.setTranslateZ(spawnZ);
@@ -1391,7 +1466,7 @@ public class App extends Application {
 
         double yaw = Math.toRadians(cameraRotationAngleY);
         
-        // Calculate forward and right vectors based on yaw angle
+        // The code below is for ensuring that directions are consistent with the camera's rotations.
         double forwardX = Math.sin(yaw);
         double forwardZ = Math.cos(yaw);
         double rightX = Math.cos(yaw);
@@ -1409,6 +1484,23 @@ public class App extends Application {
 	        hitbox.setTranslateZ(camera.getTranslateZ() + deltaX * rightZ + deltaZ * forwardZ);
 	        
         }
+//        boolean onElement = false;
+    	hitbox.setTranslateY(hitbox.getTranslateY() + 10);
+    	for (Cube po : blocks) {
+    		if (Cube.TT(po.box, hitbox)) {
+    			if (po.texture.equals("element")) {
+//    				onElement = true;
+    				po.box.setTranslateX(po.box.getTranslateX() + (deltaX * rightX + deltaZ * forwardX));
+        			po.box.setTranslateZ(po.box.getTranslateZ() + (deltaX * rightZ + deltaZ * forwardZ));
+    			}
+    			break;
+    		}
+    	}
+    	hitbox.setTranslateY(hitbox.getTranslateY() - 10);
+        
+        
+        
+        
         boolean gotHit = false;
         
         for (Cube block : blocks) {
@@ -1703,6 +1795,12 @@ class Cube {
         	this.box.setMaterial(m);
         }
         else if (path.equals("element")) {
+        	App.root.getChildren().remove(f.r);
+        	App.root.getChildren().remove(b.r);
+        	App.root.getChildren().remove(l.r);
+        	App.root.getChildren().remove(r.r);
+        	App.root.getChildren().remove(u.r);
+        	App.root.getChildren().remove(d.r);
             m.setDiffuseMap(elementt);
             this.box.setMaterial(m);
         }
@@ -1767,7 +1865,7 @@ class Cube {
         	    boolean hit = false;
 
         	    // Temporarily move the box down
-        	    App.hitbox.setTranslateY(App.hitbox.getTranslateY() - 10);
+//        	    box.setTranslateY(box.getTranslateY() - 10);
         	    double newY = box.getTranslateY() + vel;
         	    box.setTranslateY(newY);
 
@@ -1784,7 +1882,7 @@ class Cube {
         	        box.setTranslateY(box.getTranslateY() - vel);
         	        vel = 0;
         	    }
-        	    App.hitbox.setTranslateY(App.hitbox.getTranslateY() + 10);
+//        	    box.setTranslateY(box.getTranslateY() + 10);
         	    // No collision, keep the box in the new position
         	}));
         	box.setOnMouseClicked(e -> {
@@ -1914,7 +2012,7 @@ class FlatRect {
 				xt.setAngle(App.cameraRX);
 				yt.setAngle(App.cameraRY);
 				Transform local = App.camera.getLocalToSceneTransform();
-				Point3D newlocal = local.transform(new Point3D(xp * screenWidth, yp * screenHeight, z));
+				Point3D newlocal = local.transform(new Point3D(xxp * screenWidth, yyp * screenHeight, z));
 				r.setTranslateX(newlocal.getX());
 				r.setTranslateY(newlocal.getY());
 				r.setTranslateZ(newlocal.getZ());
@@ -1923,11 +2021,19 @@ class FlatRect {
 			
 			
 		}));
+		
 		timer.setCycleCount(Timeline.INDEFINITE);
 		timer.play();
 	}
 	public void setColor(Color c) {
 		r.setFill(c);
+	}
+	public void setTranslateX(double q) {
+		r.setTranslateX(q * screenWidth);
+		xxp = q;
+	}
+	public double getTranslateX() {
+		return xxp;
 	}
 			
 }
@@ -1968,7 +2074,7 @@ class FlatText {
 			xt.setAngle(App.cameraRX);
 			yt.setAngle(App.cameraRY);
 			Transform local = App.camera.getLocalToSceneTransform();
-			Point3D newlocal = local.transform(new Point3D(xp * screenWidth, yp * screenHeight, z));
+			Point3D newlocal = local.transform(new Point3D(xp * screenWidth, yp * screenHeight, 1000));
 			t.setTranslateX(newlocal.getX());
 			t.setTranslateY(newlocal.getY());
 			t.setTranslateZ(newlocal.getZ());
@@ -1986,24 +2092,37 @@ class FlatText {
 		xxp = xp;
 		yyp = yp;
 		t = new Text(te);
-		t.setTranslateZ(100);
+		t.setTranslateZ(1000);
 //		t.setCache(true);
 		t.setText(te);
+		Scale sc = new Scale(x, y);
+//		t.getTransforms().addAll(sc);
+		
 		t.setDepthTest(DepthTest.DISABLE);
 		App.root.getChildren().add(t);
 //		r.getTransforms().add(inv)
 		Rotate xt = new Rotate(0, Rotate.Y_AXIS);
 		Rotate yt = new Rotate(0, Rotate.X_AXIS);
-		t.getTransforms().addAll(xt, yt);
+//		xt.setPivotX(App.cameraX);
+//		xt.setPivotY(App.cameraY);
+//		xt.setPivotZ(App.cameraZ);
+//		yt.setPivotX(App.cameraX);
+//		yt.setPivotY(App.cameraY);
+//		yt.setPivotZ(App.cameraZ);
+//		t.getTransforms().addAll(xt, yt);
 		Timeline timer = new Timeline(new KeyFrame(Duration.millis(10), e -> {
 			App.root.getChildren().remove(t);
+			t.getTransforms().clear();
 			xt.setAngle(App.cameraRX);
 			yt.setAngle(App.cameraRY);
+//			System.out.println(App.cameraRX);
 			Transform local = App.camera.getLocalToSceneTransform();
-			Point3D newlocal = local.transform(new Point3D(xp * screenWidth, yp * screenHeight, z));
+			Point3D newlocal = local.transform(new Point3D(xp * screenWidth, yp * screenHeight, 1000));
 			t.setTranslateX(newlocal.getX());
 			t.setTranslateY(newlocal.getY());
 			t.setTranslateZ(newlocal.getZ());
+			t.getTransforms().addAll(xt, yt);
+			t.getTransforms().add(sc);
 			App.root.getChildren().add(t);
 			
 		}));
