@@ -1,7 +1,9 @@
 package pack;
 
+import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -14,11 +16,13 @@ import javafx.scene.Cursor;
 import javafx.scene.DepthTest;
 import javafx.scene.Group;
 import javafx.scene.PerspectiveCamera;
+import javafx.scene.PointLight;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.SubScene;
 import javafx.scene.effect.Bloom;
 import javafx.scene.effect.GaussianBlur;
+import javafx.scene.effect.Glow;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -126,39 +130,121 @@ public class App extends Application {
     static int fallCounter;
     static double maxHealth = 10;
     static double health = 10;
+    static boolean testGen = false;
+    static int renderDistance = 1100;
+    static ArrayList<Cube> hiddenBlocks = new ArrayList<>();
+    static Color bgColor;
+    static Timeline walk;
+    static AudioClip n = new AudioClip("file:Sounds/running.mp3");
+    static Timeline loader;
 //    static int waiter = 0;
     public App() throws AWTException {
         robot = new Robot();
     }
 //   
+    public void generateStructure(String structure, double x, double y, double z) {
+    	if (structure.equals("tree")) {
+    		ArrayList<Cube> bls = new ArrayList<>();
+    		Cube base1 = new Cube(25F, 25F, 25F, (float)(x), (float)(y), (float)(z));
+    		base1.setTexture("wood");
+    		bls.add(base1);
+    		Cube base2 = new Cube(25F, 25F, 25F, (float)(x), (float)(y-25), (float)(z));
+    		base2.setTexture("wood");
+    		bls.add(base2);
+    		Cube base3 = new Cube(25F, 25F, 25F, (float)(x), (float)(y-50), (float)(z));
+    		base3.setTexture("wood");
+    		bls.add(base3);
+    		Cube base4 = new Cube(25F, 25F, 25F, (float)(x), (float)(y-75), (float)(z));
+    		base4.setTexture("wood");
+    		bls.add(base4);
+    		Cube leaf1 = new Cube(25F, 25F, 25F, (float)(x), (float)(y-100), (float)(z));
+    		leaf1.setTexture("grass");
+    		bls.add(leaf1);
+    		Cube leaf2 = new Cube(25F, 25F, 25F, (float)(x-25), (float)(y-100), (float)(z));
+    		leaf2.setTexture("grass");
+    		bls.add(leaf2);
+    		Cube leaf3 = new Cube(25F, 25F, 25F, (float)(x+25), (float)(y-100), (float)(z));
+    		leaf3.setTexture("grass");
+    		bls.add(leaf3);
+    		Cube leaf4 = new Cube(25F, 25F, 25F, (float)(x), (float)(y-100), (float)(z-25));
+    		leaf4.setTexture("grass");
+    		bls.add(leaf4);
+    		Cube leaf5 = new Cube(25F, 25F, 25F, (float)(x), (float)(y-100), (float)(z+25));
+    		leaf5.setTexture("grass");
+    		bls.add(leaf5);
+    		Cube leaf6 = new Cube(25F, 25F, 25F, (float)(x), (float)(y-125), (float)(z));
+    		leaf6.setTexture("grass");
+    		bls.add(leaf6);
+    		for (Cube b : bls) {
+    			blocks.add(b);
+    		}
+    	}
+    }
     public void setSpawn(int x, int y, int z) {
     	playerVelocity = 0;
     	spawnX = x;
     	spawnY = y;
     	spawnZ = z;
     	 camera.setNearClip(1);
-         camera.setFarClip(2000);
+         camera.setFarClip(10000000);
          camera.getTransforms().addAll(rotateY, rotateX);
          camera.setFieldOfView(45);
          camera.setTranslateY(-spawnY * 25);
          camera.setTranslateX(spawnX * 25);
          camera.setTranslateZ(spawnZ * 25);
     }
+    public static double calculateDistance(Box box1, Box box2) {
+        double x1 = box1.getTranslateX();
+        double y1 = box1.getTranslateY();
+        double z1 = box1.getTranslateZ();
+
+        double x2 = box2.getTranslateX();
+        double y2 = box2.getTranslateY();
+        double z2 = box2.getTranslateZ();
+
+        return Math.sqrt(Math.pow(x2 - x1, 2) + 
+                         Math.pow(y2 - y1, 2) + 
+                         Math.pow(z2 - z1, 2));
+    }
     public void worldSet(String element, Stage primaryStage) throws NumberFormatException, NonInvertibleTransformException {
-//    	AudioClip n = new AudioClip("file:Sounds/rubedo.mp3");
-//		n.play();
-    	// Using a relative path with getClass().getResource()
-//    	Media media = new Media(new File("Sounds/rubedo.mp3").toURI().toString());
-//		MediaPlayer player1 = new MediaPlayer(media);
-//		player1.setCycleCount(MediaPlayer.INDEFINITE);
-//		player1.play();
-//    	Timeline warmUp = new Timeline(
-//    		    new KeyFrame(Duration.millis(100), e -> {
-//    		        
-//    		    })
-//    		);
-//    		warmUp.setCycleCount(10); // Run this for 10 frames
-//    		warmUp.play();
+    	 Sphere sun = new Sphere(1000);
+         sun.setTranslateY(-7777);
+         sun.setTranslateX(9999);
+         // Set the material to make it look bright
+         PhongMaterial sunMaterial = new PhongMaterial();
+         sunMaterial.setDiffuseColor(Color.WHITE); // Base color of the sun
+         sunMaterial.setSpecularColor(Color.WHITE); // Shiny part
+         sun.setMaterial(sunMaterial);
+
+         // Add a Bloom effect to make it glow
+         Bloom bloom = new Bloom(0.5); // Adjust intensity (0.0 - 1.0)
+         sun.setEffect(bloom);
+         root.getChildren().addAll(sun);
+         // Add PointLight to simulate sunlight
+         
+    	if (element.equals("wind")) {
+    		bgColor = Color.rgb(10, 10, 40);
+    	}
+    	else if (element.equals("fire")) {
+    		bgColor = Color.DARKRED;
+    	}
+    	scene.setFill(bgColor);
+        scene.setCamera(camera);
+    	walk = new Timeline(
+    			new KeyFrame(Duration.ZERO, event -> {
+    	           
+    		    	n.play();
+    	        }),
+    		    new KeyFrame(Duration.millis(7500), e -> {
+    		    	
+    		    	n.play();
+    		    })
+    		);
+    		walk.setCycleCount(Timeline.INDEFINITE); // Run this for 10 frames
+//    		walk.play();
+    		walk.setOnFinished(e -> {
+    			n.stop();
+    		});
     	
     	try (BufferedReader br = new BufferedReader(new FileReader("Maps/windtp.csv"))) {
             String line;
@@ -186,10 +272,11 @@ public class App extends Application {
     			numItems.add(0);
     		}
     	}
-    	setSpawn(0, 9, 0);
+    	setSpawn(0, 10, 0);
         setupMovement(scene, camera, primaryStage);
     	Platform.runLater(() -> {
-    		try (BufferedReader br = new BufferedReader(new FileReader("Maps/wind.csv"))) {
+    		if (!testGen) {
+    		try (BufferedReader br = new BufferedReader(new FileReader("Maps/Test.csv"))) {
                 String line;
                 while ((line = br.readLine()) != null) {
                     String[] values = line.split(",");
@@ -200,6 +287,7 @@ public class App extends Application {
                     }
                 }
             } catch (IOException e) {
+            	System.out.println("2");
             }
               	 for (Map.Entry<Point3DKey, String> entry : map.entrySet()) {
                    	Point3D p = entry.getKey().point;
@@ -212,7 +300,49 @@ public class App extends Application {
                    	});
                        
                    }
-            
+    		}
+    		else {
+    			int count = 0;
+    			for (int i = -105; i < 105; i++) {
+    			    for (int j = -55; j < 55; j++) {
+    			        double noiseScale = 0.01;  // Adjust for more or less smooth terrain
+    			        double height = PerlinNoise.noise(i * noiseScale, j * noiseScale) * 60; // Scale to desired height
+
+    			        int roundedHeight = (int) Math.round(height) * 25; // Ensuring block placement in increments
+
+    			        Point3DKey k = new Point3DKey(i, roundedHeight, j);
+    			        Box btemp = new Box(25, 25, 25);
+    			        btemp.setTranslateX(i * 25);
+    			        btemp.setTranslateY(roundedHeight);
+    			        btemp.setTranslateZ(j * 25);
+
+    			        Cube y = new Cube(25F, 25F, 25F, (float) btemp.getTranslateX(), (float) btemp.getTranslateY(), (float) btemp.getTranslateZ(), false);
+    			        y.setTexture("magma");
+    			        
+    			        if (!(calculateDistance(btemp, hitbox) > renderDistance)) {
+    			        	count++;
+    			            App.root.getChildren().add(y.box);
+    			            App.root.getChildren().add(y.f.r);
+    			            App.root.getChildren().add(y.b.r);
+    			            App.root.getChildren().add(y.l.r);
+    			            App.root.getChildren().add(y.r.r);
+    			            App.root.getChildren().add(y.u.r);
+    			            App.root.getChildren().add(y.d.r);
+    			            blocks.add(y);
+    			            boolean placeTree = (Math.random() > 0.99);
+    			            if (placeTree) {
+    			            	generateStructure("tree", btemp.getTranslateX(), btemp.getTranslateY() - 25, btemp.getTranslateZ());
+    			            }
+    			            
+    			        }
+    			        else {
+    			        	hiddenBlocks.add(y);
+    			        }
+//    			        System.out.println(count);
+    			        map.put(k, "magma");
+    			    }
+    			}
+    		}
             try (BufferedReader br = new BufferedReader(new FileReader("UI/WindHUD.csv"))) {
                 String line;
                 Image scooby = new Image("file:Textures/god.png");
@@ -268,6 +398,13 @@ public class App extends Application {
                             }
                             else if (block.equals("blueBlockTransparent")) {
                             	temp.setColor(Color.BLUE);
+                            	temp.r.setOpacity(0.4);
+                            	options.add(block);
+                            	inv.add(temp);
+                            	
+                            }
+                            else if (block.equals("lava")) {
+                            	temp.setColor(Color.ORANGE);
                             	temp.r.setOpacity(0.4);
                             	options.add(block);
                             	inv.add(temp);
@@ -402,26 +539,70 @@ public class App extends Application {
 			}
            
     	});
-    	
+    	Timeline rd = new Timeline(new KeyFrame(Duration.millis(200), e -> {
+    		Platform.runLater(() -> {
+    		    var hB = hiddenBlocks;
+    		    var b = blocks;
+    			for (Cube y : hB) {
+    				if (!root.getChildren().contains(y.box) && calculateDistance(hitbox, y.box) <= renderDistance){
+            			App.root.getChildren().add(y.box);
+                        App.root.getChildren().add(y.f.r);
+                        App.root.getChildren().add(y.b.r);
+                        App.root.getChildren().add(y.l.r);
+                        App.root.getChildren().add(y.r.r);
+                        App.root.getChildren().add(y.u.r);
+                        App.root.getChildren().add(y.d.r);  
+                        Platform.runLater(() -> {
+                        	hiddenBlocks.remove(y);
+                            blocks.add(y);
+                        });
+                        
+//                        y.box.setVisible(true);
+            		}
+    			}
+    			for (Cube y : b) {
+    				if (calculateDistance(hitbox, y.box) > renderDistance && root.getChildren().contains(y.box)) {
+            			App.root.getChildren().remove(y.box);
+                        App.root.getChildren().remove(y.f.r);
+                        App.root.getChildren().remove(y.b.r);
+                        App.root.getChildren().remove(y.l.r);
+                        App.root.getChildren().remove(y.r.r);
+                        App.root.getChildren().remove(y.u.r);
+                        App.root.getChildren().remove(y.d.r);  
+                        Platform.runLater(() -> {
+                        	hiddenBlocks.add(y);
+                            blocks.remove(y);
+                        });
+                        
+//            			y.box.setVisible(false);
+            		}
+    			}
+            		
+            		
+            	
+    		});
+    		
+    	}));
+//    	rd.setCycleCount(Timeline.INDEFINITE);
+//    	rd.play();
         previousX = scene.getWidth() / 2;
         previousY = scene.getHeight() / 2;
         robot.mouseMove((int) previousX, (int) previousY);
         Timeline gen = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-//        	if (fallCounter > 0) {
-//        		if (fallCounter < 5) {
-//        			healthBar.r.setOpacity(0);
-//        			fallCounter++;
-//        		}
-//        		else {
-//        			fallCounter = 0;
-//        			healthBar.r.setOpacity(0);
-//        		}
+//        	
+//        	for (Cube block : blocks) {
+//        		if (block.box.getBoundsInParent().intersects(hitbox.getBoundsInParent)) {
+//            	    block.setVisible(true);
+//            	} else {
+//            	    block.setVisible(false);
+//            	}
 //        	}
+        	
         	
         	if (camera.getTranslateY() > 500) {
         		health -= camera.getTranslateY()/50000;
         	}
-        	System.out.println(health);
+//        	System.out.println(health);
         	if (health < maxHealth) {
         		health += 0.004;
         	}
@@ -435,7 +616,7 @@ public class App extends Application {
             	camera.setTranslateX(spawnX);
             	camera.setTranslateZ(spawnZ);
             	timeElapsed += 30;
-            	scene.setFill(Color.LIGHTSKYBLUE);
+            	scene.setFill(bgColor);
             	playerVelocity = 0;
             	if (maxHealth > 2) {
             		maxHealth -= 1;
@@ -499,22 +680,22 @@ public class App extends Application {
         	j = reach * 25;
         	if (jumping) {
         		if (playerVelocity == 0) {		
-        			playerVelocity = -2;
+        			playerVelocity = -2.4;
         		}
         	}
-        	Platform.runLater(() -> {
-        		for (Cube block : blocks) {
-        			
-            		if (block.box.computeAreaInScreen() == 0) {
-            			block.box.setVisible(false);
-            			
-            		}
-            		else {
-            			block.box.setVisible(true);
-            		}
-            	}
-        	});
-        	Color v = Color.LIGHTSKYBLUE;
+//        	Platform.runLater(() -> {
+//        		for (Cube block : blocks) {
+//        			
+//            		if (block.box.computeAreaInScreen() == 0 && root.getChildren().contains(block.box)) {
+//            			root.getChildren().remove(block.box);
+//            			
+//            		}
+//            		else if (block.box.computeAreaInScreen() != 0 && !root.getChildren().contains(block.box)){
+//            			block.box.setVisible(true);
+//            		}
+//            	}
+//        	});
+        	Color v = bgColor;
         	double lowest = 9999;
         	for (Cube g : teleporters) {
         		double distance = Math.sqrt(Math.pow(hitbox.getTranslateX() - g.box.getTranslateX(), 2) + Math.pow(hitbox.getTranslateY() - g.box.getTranslateY(), 2) + Math.pow(hitbox.getTranslateZ() - g.box.getTranslateZ(), 2));
@@ -591,7 +772,7 @@ public class App extends Application {
         gen.setCycleCount(Timeline.INDEFINITE);
         gen.play();
         Timeline motion = new Timeline(new KeyFrame(Duration.millis(10), e -> {
-        	playerVelocity += 0.06;
+        	playerVelocity += 0.09;
         	hitbox.setHeight(50);
         	hitbox.setTranslateY(camera.getTranslateY() + playerVelocity + 25);
         	if (sneaking) {
@@ -645,6 +826,7 @@ public class App extends Application {
         	motion.setCycleCount(Timeline.INDEFINITE);
         	motion.play();
         }
+      
         scene.setOnMouseMoved(event -> {
         	
                 double deltaX = event.getScreenX() - (scene.getWidth() / 2);
@@ -658,8 +840,11 @@ public class App extends Application {
                 rotateY.setAngle(cameraRotationAngleY);
                 rotateX.setAngle(cameraRotationAngleX);
                 Platform.runLater(() -> {
-                    robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
+//                rotateY.setAngle(cameraRotationAngleY);
+//                rotateX.setAngle(cameraRotationAngleX);
+                	robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
                 });
+               
         });
         scene.setOnMousePressed(e -> {
 //        	 System.out.println(root.getChildren().size());
@@ -1140,8 +1325,7 @@ public class App extends Application {
     public void start(Stage primaryStage) throws Exception {
     	
     	
-    	scene.setFill(Color.LIGHTSKYBLUE);
-        scene.setCamera(camera);
+    	
         
 //        b.setTranslateY(100);
 //        root.getChildren().add(rootroot);
@@ -1150,15 +1334,67 @@ public class App extends Application {
         primaryStage.setTitle("3D Camera Control");
         primaryStage.setScene(scene);
         primaryStage.setFullScreen(true);
+        primaryStage.setFullScreenExitHint(""); // Empty string disables the hint
         primaryStage.show();
-        AmbientLight light = new AmbientLight(Color.WHITE);
-        root.getChildren().add(light);
+       
+        
         screenX = primaryStage.getWidth();
         screenY = primaryStage.getHeight();
-        worldSet("wind", primaryStage);
         
-        
-        
+        ImageView b = new ImageView(new Image("file:Textures/t.png")); // Correct image path
+
+     // Optional: Set explicit fit size for the image
+	     b.setFitWidth(screenX);  // Set a width that fits on screen
+	     b.setFitHeight(screenY); // Set a height that fits on screen
+
+	     root.getChildren().add(b);  // Add the image view to the root layout     
+//				worldSet("wind", primaryStage); 
+	     ImageView st = new ImageView(new Image("file:Textures/sssss.png")); // Correct image path
+	     st.setFitWidth(800);
+	     st.setFitHeight(200);
+	     st.setTranslateX(screenX/2 - 400);
+	     st.setTranslateY(screenY/2 - 100 + 200);
+	     root.getChildren().add(st);
+	     ImageView s = new ImageView(new Image("file:Textures/ff.png")); // Correct image path
+	     s.setFitWidth(700);
+	     s.setFitHeight(300);
+	     s.setTranslateX(600);
+	     s.setTranslateY(100);
+	     root.getChildren().add(s);
+	     
+	     st.setOnMouseClicked(e -> {
+	    	 root.getChildren().clear();
+	    	 ImageView load = new ImageView(new Image("file:Textures/load.png")); // Correct image path
+	    	 load.setFitWidth(screenX);
+	    	 load.setFitHeight(screenY);
+	    	 root.getChildren().add(load);
+	    	 Rectangle bar = new Rectangle(screenX, 50);
+	    	 bar.setTranslateX(-screenX);
+	    	 bar.setTranslateY(screenY - 200);
+	    	 bar.setFill(Color.rgb(7, 144, 212));
+	    	 root.getChildren().add(bar);
+	    	 loader = new Timeline(
+	    	    new KeyFrame(Duration.millis(1), ee -> {
+	     		    bar.setTranslateX(bar.getTranslateX() + 2);
+	     		    if (bar.getTranslateX() > 0) {
+	     		    	root.getChildren().clear();
+	     		    	loader.stop();
+	     		    	try {
+							worldSet("wind", primaryStage);
+						} catch (NumberFormatException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (NonInvertibleTransformException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+	     		    }
+	     		})
+	    	    
+	     	 );
+	    	 loader.setCycleCount(Timeline.INDEFINITE);
+	    	 loader.play();
+	     });
     }
     public void deleteWorld() {
     	
@@ -1178,67 +1414,67 @@ public class App extends Application {
     	reach = 8;
     }
     private void setupMovement(Scene scene, PerspectiveCamera camera, Stage primaryStage) {
-        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+        Timeline moveF = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
         		if (!sprinting) {
-        			moveCamera(camera, 0, .1, 0);
+        			moveCamera(camera, 0, 1, 0);
         		}
         		else {
-        			moveCamera(camera, 0, .25, 0);
+        			moveCamera(camera, 0, 2.5, 0);
         		}
         	}
         	else {
-        		moveCamera(camera, 0, .05, 0);
+        		moveCamera(camera, 0, .5, 0);
         	}
         }));
         moveF.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+        Timeline moveR = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, .1, 0, 0);
+            moveCamera(camera, 1, 0, 0);
         	}
         	else {
-        		moveCamera(camera, 0.05, 0, 0);
+        		moveCamera(camera, 0.5, 0, 0);
         	}
         }));
         moveR.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+        Timeline moveB = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, -.1, 0);
+            moveCamera(camera, 0, -1, 0);
         	}
         	else {
-        		moveCamera(camera, 0, -.05, 0);
+        		moveCamera(camera, 0, -.5, 0);
         	}
         }));
         moveB.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+        Timeline moveL = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, -.1, 0, 0);
+            moveCamera(camera, -1, 0, 0);
         	}
         	else {
-        		moveCamera(camera, -0.05, 0, 0);
+        		moveCamera(camera, -0.5, 0, 0);
         	}
         }));
         moveL.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+        Timeline moveU = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, 0, -.1);
+            moveCamera(camera, 0, 0, -1);
         	}
         	else {
-        		moveCamera(camera, 0, 0, -0.05);
+        		moveCamera(camera, 0, 0, -0.5);
         	}
         }));
         moveU.setCycleCount(Timeline.INDEFINITE);
 
-        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(1), e -> {
+        Timeline moveD = new Timeline(new KeyFrame(Duration.millis(10), e -> {
         	if (!sneaking) {
-            moveCamera(camera, 0, 0, .1);
+            moveCamera(camera, 0, 0, 1);
         	}
         	else {
-        		moveCamera(camera, 0, 0, 0.05);
+        		moveCamera(camera, 0, 0, 0.5);
         	}
         }));
         moveD.setCycleCount(Timeline.INDEFINITE);
@@ -1271,6 +1507,7 @@ public class App extends Application {
             	}
         	}
         });
+        
         scene.setOnKeyPressed(e -> {
         	if (e.getCode() == KeyCode.UP) { 
         		if (camera.getFarClip() < 20000) {
@@ -1282,10 +1519,31 @@ public class App extends Application {
         			camera.setFarClip(camera.getFarClip() - 10);
         		}
         	}
-            if (e.getCode() == KeyCode.W) moveF.play();
-            if (e.getCode() == KeyCode.D) moveR.play();
-            if (e.getCode() == KeyCode.S) moveB.play();
-            if (e.getCode() == KeyCode.A) moveL.play();
+            if (e.getCode() == KeyCode.W) {
+            	moveF.play();
+            	if (!n.isPlaying()) {
+            		n.play();
+            	}
+            	
+            }
+            if (e.getCode() == KeyCode.D) {
+            	moveR.play();
+            	if (!n.isPlaying()) {
+            		n.play();
+            	}
+            }
+            if (e.getCode() == KeyCode.S) {
+            	moveB.play();
+            	if (!n.isPlaying()) {
+            		n.play();
+            	}
+            }
+            if (e.getCode() == KeyCode.A) {
+            	moveL.play();
+            	if (!n.isPlaying()) {
+            		n.play();
+            	}
+            }
             if (e.getCode() == KeyCode.Q) sprinting = true; 
             if (e.getCode() == KeyCode.SPACE) {
             	if (!godMode) {
@@ -1305,7 +1563,7 @@ public class App extends Application {
             	camera.setTranslateX(spawnX);
             	camera.setTranslateZ(spawnZ);
             	
-            	scene.setFill(Color.LIGHTSKYBLUE);
+            	scene.setFill(bgColor);
             	playerVelocity = 0;
             }
             if (e.getCode() == KeyCode.SHIFT) {
@@ -1323,7 +1581,7 @@ public class App extends Application {
             	if (godMode) {
 	            	BufferedWriter bw;
 	    			try {
-	    				bw = new BufferedWriter(new FileWriter("Maps/wind.csv", false));
+	    				bw = new BufferedWriter(new FileWriter("Maps/Test.csv", false));
 	    				for (Map.Entry<Point3DKey, String> entry : map.entrySet()) {
 	    					Point3DKey p = entry.getKey();
 	    					String sb = entry.getValue();
@@ -1437,28 +1695,40 @@ public class App extends Application {
         });
 
         scene.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.W) moveF.stop();
-            if (e.getCode() == KeyCode.D) moveR.stop();
-            if (e.getCode() == KeyCode.S) moveB.stop();
-            if (e.getCode() == KeyCode.A) moveL.stop();
-            if (e.getCode() == KeyCode.Q) sprinting = false; 
+            if (e.getCode() == KeyCode.W) {
+                moveF.stop(); 
+                n.stop();
+                System.out.println("here");
+            }
+            if (e.getCode() == KeyCode.D) {
+                moveR.stop();
+                n.stop();
+            }
+            if (e.getCode() == KeyCode.S) {
+                moveB.stop();
+                n.stop();
+            }
+            if (e.getCode() == KeyCode.A) {
+                moveL.stop();
+                n.stop();
+            }
+            if (e.getCode() == KeyCode.Q) {
+                sprinting = false;
+            }
             if (e.getCode() == KeyCode.SPACE) {
-            	if (!godMode) {
-            	jumping = false;
-            	}
-            	else {
-            		moveU.stop();
-            	}
+                if (!godMode) {
+                    jumping = false;
+                } else {
+                    moveU.stop();
+                }
             }
             if (e.getCode() == KeyCode.SHIFT) {
-            	if (!godMode) {
-            	sneaker = true;
-            	}
-            	else {
-            		moveD.stop();
-            	}
+                if (!godMode) {
+                    sneaker = true;
+                } else {
+                    moveD.stop();
+                }
             }
-            
         });
         
     }
@@ -1698,6 +1968,7 @@ class Cube {
 		breakable = true;
 		m = new PhongMaterial();
 		box = new Box(length, width, height);
+
 		box.setTranslateX(x);
 		box.setTranslateY(y);
 		box.setTranslateZ(z);
@@ -1773,6 +2044,86 @@ class Cube {
 		App.root.getChildren().add(d.r);
 		App.ds.add(d);
 	}
+	public Cube(float length, float width, float height, float x, float y, float z, boolean nf) {
+		movable = false;
+		breakable = true;
+		m = new PhongMaterial();
+		box = new Box(length, width, height);
+		box.setTranslateX(x);
+		box.setTranslateY(y);
+		box.setTranslateZ(z);
+//		box.setEffect(new GaussianBlur(5));
+		box.setCache(true);
+//		App.root.getChildren().add(box);
+		f = new Rect(25, 25, this);
+		f.setTranslateX(x-12.5);
+		f.setTranslateY(y-12.5);
+		f.setTranslateZ(z - 12.6);
+		f.setOpacity(opacity);
+//		App.root.getChildren().add(f.r);
+		App.fs.add(f);
+		b = new Rect(25, 25, this);
+		b.setTranslateX(x-12.5);
+		b.setTranslateY(y-12.5);
+		b.setTranslateZ(z + 12.6);
+		b.setOpacity(opacity);
+//		App.root.getChildren().add(b.r);
+		App.bs.add(b);
+		l = new Rect(25, 25, this);
+		Rotate lr = new Rotate(90);
+		lr.setAxis(Rotate.Y_AXIS);
+//		lr.setPivotX(l.getX() + (l.getWidth())/2);
+//		lr.setPivotY(l.getY() + (l.getHeight())/2);
+//		lr.setPivotZ(l.getTranslateZ());
+		l.r.getTransforms().add(lr);
+		l.setTranslateX(x - 12.6);
+		l.setTranslateY(y-12.5);
+		l.setTranslateZ(z+12.5);
+		l.setOpacity(opacity);
+//		App.root.getChildren().add(l.r);
+		App.ls.add(l);
+		r = new Rect(25, 25, this);
+		r.setTranslateX(x+12.6);
+		r.setTranslateY(y-12.5);
+		r.setTranslateZ(z+12.5);
+		Rotate rr = new Rotate(90);
+		rr.setAxis(Rotate.Y_AXIS);
+//		rr.setPivotX(l.getX() + (l.getWidth())/2);
+//		rr.setPivotY(l.getY() + (l.getHeight())/2);
+//		rr.setPivotZ(z);
+//		rr.setAngle(90);
+		r.r.getTransforms().add(rr);
+		r.setOpacity(opacity);
+//		App.root.getChildren().add(r.r);
+		App.rs.add(r);
+		u = new Rect(25, 25, this);
+		Rotate ur = new Rotate(90);
+		ur.setAxis(Rotate.X_AXIS);
+//		ur.setPivotX(l.getX() + (l.getWidth())/2);
+//		ur.setPivotY(l.getY() + (l.getHeight())/2);
+//		ur.setPivotZ(l.getTranslateZ());
+		u.r.getTransforms().add(ur);
+		u.setTranslateX(x-12.5);
+		u.setTranslateY(y-12.6);
+		u.setTranslateZ(z-12.5);
+		
+		u.setOpacity(opacity);
+//		App.root.getChildren().add(u.r);
+		App.us.add(u);
+		d = new Rect(25, 25, this);
+		Rotate dr = new Rotate(90);
+		dr.setAxis(Rotate.X_AXIS);
+//		dr.setPivotX(l.getX() + (l.getWidth())/2);
+//		dr.setPivotY(l.getY() + (l.getHeight())/2);
+//		dr.setPivotZ(l.getTranslateZ());
+		d.r.getTransforms().add(dr);
+		d.setTranslateX(x-12.5);
+		d.setTranslateY(y+12.6);
+		d.setTranslateZ(z-12.5);
+		d.setOpacity(opacity);
+//		App.root.getChildren().add(d.r);
+		App.ds.add(d);
+	}
 	public void setTexture(String path) {
 		texture = path;
         if (path.equals("scooby")) {
@@ -1791,6 +2142,13 @@ class Cube {
         else if (path.equals("blueBlockTransparent")) {
 //        	System.out.println("hello");
         	m.setDiffuseColor(new Color(0, 0, 1, 0.4));
+        	
+//        	box.setOpacity(0.1);
+        	this.box.setMaterial(m);
+        }
+        else if (path.equals("lava")) {
+//        	System.out.println("hello");
+        	m.setDiffuseColor(new Color(1, 0.33, 0, 0.4));
         	
 //        	box.setOpacity(0.1);
         	this.box.setMaterial(m);
@@ -2007,7 +2365,7 @@ class FlatRect {
 		Rotate xt = new Rotate(0, Rotate.Y_AXIS);
 		Rotate yt = new Rotate(0, Rotate.X_AXIS);
 		r.getTransforms().addAll(xt, yt);
-		Timeline timer = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+		Timeline timer = new Timeline(new KeyFrame(Duration.millis(5), e -> {
 			
 				App.root.getChildren().remove(r);
 				xt.setAngle(App.cameraRX);
@@ -2062,7 +2420,7 @@ class FlatText {
 		xxp = xp;
 		yyp = yp;
 		t = new Text(Integer.toString(App.numItems.get(index)));
-		t.setTranslateZ(100);
+		t.setTranslateZ(500);
 //		t.setCache(true);
 		t.setDepthTest(DepthTest.DISABLE);
 		App.root.getChildren().add(t);
@@ -2070,7 +2428,7 @@ class FlatText {
 		Rotate xt = new Rotate(0, Rotate.Y_AXIS);
 		Rotate yt = new Rotate(0, Rotate.X_AXIS);
 		t.getTransforms().addAll(xt, yt);
-		Timeline timer = new Timeline(new KeyFrame(Duration.millis(10), e -> {
+		Timeline timer = new Timeline(new KeyFrame(Duration.millis(5), e -> {
 			App.root.getChildren().remove(t);
 			xt.setAngle(App.cameraRX);
 			yt.setAngle(App.cameraRY);
@@ -2184,19 +2542,84 @@ class Sound {
 		}
 	}
 	public static void placeSound(String texture) {
-		if (texture.equals("wood")) {
+		if (texture.equals("windBrick")) {
+			AudioClip n = new AudioClip("file:Sounds/brickBreak.mp3");
+			n.setVolume(100);
+			n.play();
+		}
+		else if (texture.equals("wood")) {
 			AudioClip n = new AudioClip("file:Sounds/wood.mp3");
+			n.play();
+		}
+		else if (texture.equals("brick")) {
+			AudioClip n = new AudioClip("file:Sounds/brickBreak.mp3");
 			n.play();
 		}
 		else if (texture.equals("sand")) {
 			AudioClip n = new AudioClip("file:Sounds/sand.mp3");
-			n.play();
+			
+			n.play(); 
 		}
 	}
 	public static void moveMetal() {
 		AudioClip n = new AudioClip("file:Sounds/metal.mp3");
+		n.setVolume(0.1);
 		n.play();
 	}
 	
 }
-//k
+class PerlinNoise {
+    private static final int[] permutation = { 151, 160, 137, 91, 90, 15,
+            131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23,
+            190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33,
+            88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166,
+            77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244,
+            102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196,
+            135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123,
+            5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28,
+            42, 223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172,
+            9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97,
+            228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239,
+            107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150,
+            254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156,
+            180 };
+
+    private static final int[] p;
+
+    static {
+        p = new int[512];
+        for (int i = 0; i < 256; i++) {
+            p[i] = p[i + 256] = permutation[i];
+        }
+    }
+
+    public static double noise(double x, double y) {
+        int X = (int) Math.floor(x) & 255;
+        int Y = (int) Math.floor(y) & 255;
+        x -= Math.floor(x);
+        y -= Math.floor(y);
+        double u = fade(x);
+        double v = fade(y);
+        int A = p[X] + Y, AA = p[A], AB = p[A + 1];
+        int B = p[X + 1] + Y, BA = p[B], BB = p[B + 1];
+
+        return lerp(v, 
+                lerp(u, grad(p[AA], x, y), grad(p[BA], x - 1, y)), 
+                lerp(u, grad(p[AB], x, y - 1), grad(p[BB], x - 1, y - 1)));
+    }
+
+    private static double fade(double t) {
+        return t * t * t * (t * (t * 6 - 15) + 10);
+    }
+
+    private static double lerp(double t, double a, double b) {
+        return a + t * (b - a);
+    }
+
+    private static double grad(int hash, double x, double y) {
+        int h = hash & 3;
+        double u = h < 2 ? x : y;
+        double v = h < 2 ? y : x;
+        return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+    }
+}
