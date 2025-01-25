@@ -1522,6 +1522,7 @@ public class App extends Application {
             if (e.getCode() == KeyCode.W) {
             	moveF.play();
             	if (!n.isPlaying()) {
+            		n.setCycleCount(Timeline.INDEFINITE);
             		n.play();
             	}
             	
@@ -1743,6 +1744,18 @@ public class App extends Application {
         double rightX = Math.cos(yaw);
         double rightZ = -Math.sin(yaw);
         hitbox.setHeight(50);
+        hitbox.setTranslateY(hitbox.getTranslateY() + 10);
+    	for (Cube po : blocks) {
+    		if (T(po.box, hitbox)) {
+    			if (po.texture.equals("element")) {
+//    				onElement = true;
+    				po.box.setTranslateX(po.box.getTranslateX() + (deltaX * rightX + deltaZ * forwardX));
+        			po.box.setTranslateZ(po.box.getTranslateZ() + (deltaX * rightZ + deltaZ * forwardZ));
+    			}
+    			break;
+    		}
+    	}
+    	hitbox.setTranslateY(hitbox.getTranslateY() - 10);
         if (!sneaking) {
 	        hitbox.setTranslateX(camera.getTranslateX() + deltaX * rightX + deltaZ * forwardX);
 	        hitbox.setTranslateY(camera.getTranslateY() + deltaY + 25);
@@ -1756,18 +1769,7 @@ public class App extends Application {
 	        
         }
 //        boolean onElement = false;
-    	hitbox.setTranslateY(hitbox.getTranslateY() + 10);
-    	for (Cube po : blocks) {
-    		if (Cube.TT(po.box, hitbox)) {
-    			if (po.texture.equals("element")) {
-//    				onElement = true;
-    				po.box.setTranslateX(po.box.getTranslateX() + (deltaX * rightX + deltaZ * forwardX));
-        			po.box.setTranslateZ(po.box.getTranslateZ() + (deltaX * rightZ + deltaZ * forwardZ));
-    			}
-    			break;
-    		}
-    	}
-    	hitbox.setTranslateY(hitbox.getTranslateY() - 10);
+    	
         
         
         
