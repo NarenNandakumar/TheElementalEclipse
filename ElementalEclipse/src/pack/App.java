@@ -122,7 +122,7 @@ public class App extends Application {
     static boolean sprinting = false;
     static boolean teleported = false;
     static ArrayList<FlatText> txts = new ArrayList<FlatText>();
-    static boolean godMode = false;
+    static boolean godMode = true;
     static ArrayList<Cube> teleporters = new ArrayList<Cube>();
     static double timeElapsed;
     static FlatText time;
@@ -212,8 +212,8 @@ public class App extends Application {
          sun.setTranslateX(9999);
          // Set the material to make it look bright
          PhongMaterial sunMaterial = new PhongMaterial();
-         sunMaterial.setDiffuseColor(Color.WHITE); // Base color of the sun
-         sunMaterial.setSpecularColor(Color.WHITE); // Shiny part
+         sunMaterial.setDiffuseColor(Color.ORANGE); // Base color of the sun
+         sunMaterial.setSpecularColor(Color.ORANGERED); // Shiny part
          sun.setMaterial(sunMaterial);
 
          // Add a Bloom effect to make it glow
@@ -223,7 +223,7 @@ public class App extends Application {
          // Add PointLight to simulate sunlight
          
     	if (element.equals("wind")) {
-    		bgColor = Color.rgb(10, 10, 40);
+    		bgColor = Color.rgb(0,0,51);
     	}
     	else if (element.equals("fire")) {
     		bgColor = Color.DARKRED;
@@ -405,7 +405,7 @@ public class App extends Application {
                             }
                             else if (block.equals("lava")) {
                             	temp.setColor(Color.ORANGE);
-                            	temp.r.setOpacity(0.4);
+//                            	temp.r.setOpacity(100);
                             	options.add(block);
                             	inv.add(temp);
                             	
@@ -2148,7 +2148,7 @@ class Cube {
         }
         else if (path.equals("lava")) {
 //        	System.out.println("hello");
-        	m.setDiffuseColor(new Color(1, 0.33, 0, 0.4));
+        	m.setDiffuseColor(new Color(1, 0.333, 0, 0.8));
         	
 //        	box.setOpacity(0.1);
         	this.box.setMaterial(m);
