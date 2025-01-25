@@ -14,11 +14,4 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>Maps/Test.csv</name>
-			<type>1</type>
-			<location>C:/Users/nanda/Downloads/Test.csv</location>
-		</link>
-	</linkedResources>
 </projectDescription>

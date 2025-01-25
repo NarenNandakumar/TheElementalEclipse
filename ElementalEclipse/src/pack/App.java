@@ -32,6 +32,7 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
@@ -122,7 +123,7 @@ public class App extends Application {
     static boolean sprinting = false;
     static boolean teleported = false;
     static ArrayList<FlatText> txts = new ArrayList<FlatText>();
-    static boolean godMode = true;
+    static boolean godMode = false;
     static ArrayList<Cube> teleporters = new ArrayList<Cube>();
     static double timeElapsed;
     static FlatText time;
@@ -137,6 +138,8 @@ public class App extends Application {
     static Timeline walk;
     static AudioClip n = new AudioClip("file:Sounds/running.mp3");
     static Timeline loader;
+    static boolean worldEnd = false;
+    static int numCircuits = 0;
 //    static int waiter = 0;
     public App() throws AWTException {
         robot = new Robot();
@@ -272,7 +275,7 @@ public class App extends Application {
     			numItems.add(0);
     		}
     	}
-    	setSpawn(0, 10, 0);
+    	setSpawn(0, 5, 0);
         setupMovement(scene, camera, primaryStage);
     	Platform.runLater(() -> {
     		if (!testGen) {
@@ -597,7 +600,56 @@ public class App extends Application {
 //            	    block.setVisible(false);
 //            	}
 //        	}
-        	
+        	try {
+        	for (Cube b : blocks) {
+        		if (b.texture.equals("metal")) {
+        			if ((int)b.box.getTranslateX() <= -825 && (int)(b.box.getTranslateX()) >= -850 && (int)b.box.getTranslateY() == (-25) && (int)b.box.getTranslateZ() <= (-2075) && (int)(b.box.getTranslateZ()) >= -2100) {
+        				worldEnd = true;
+        				blocks.clear();
+        				primaryStage.close();
+        				root.getChildren().clear();
+        				Stage stage = new Stage();
+        				Pane newRoot = new Pane();  // Or your desired layout
+        				// Rebuild UI elements
+        				Scene newScene = new Scene(newRoot, 800, 600);
+        				stage.setFullScreen(true);
+        				stage.setScene(newScene);
+        				stage.setFullScreenExitHint("");
+        				stage.show();
+        				screenX = newScene.getWidth();
+        				screenY = newScene.getHeight();
+        				ImageView backs = new ImageView(new Image("file:Textures/t.png")); // Correct image path
+        				    backs.setFitWidth(screenX); 
+        				     backs.setFitHeight(screenY); 
+        				 newRoot.getChildren().add(backs);
+        				ImageView st = new ImageView(new Image("file:Textures/con.png")); // Correct image path
+        			     st.setFitWidth(800);
+        			     st.setFitHeight(200);
+        			     st.setTranslateX(screenX/2 - 400);
+        			     st.setTranslateY(screenY/2 - 100 + 200);
+        			     newRoot.getChildren().add(st);
+        			     ImageView s = new ImageView(new Image("file:Textures/score.png")); // Correct image path
+        			     s.setFitWidth(700);
+        			     s.setFitHeight(200);
+        			     s.setTranslateX(600);
+        			     s.setTranslateY(100);
+        			     newRoot.getChildren().add(s);
+        			     int score = (600 - (int)(timeElapsed)) * numCircuits;
+        			     Text sco = new Text();
+        			     sco.setText(Integer.toString(score));
+        			     sco.setScaleX(8);
+        			     sco.setScaleY(4);
+        			     sco.setTranslateX(1350);
+        			     sco.setTranslateY(200);
+        			     newRoot.getChildren().add(sco);
+        			}
+//        			System.out.println("x: " + b.box.getTranslateX()+ " y: " +  b.box.getTranslateY() + " z: " + b.box.getTranslateZ());
+        		}
+        	}
+        	}
+        	catch (Exception ec) {
+        		
+        	}
         	
         	if (camera.getTranslateY() > 500) {
         		health -= camera.getTranslateY()/50000;
@@ -828,7 +880,7 @@ public class App extends Application {
         }
       
         scene.setOnMouseMoved(event -> {
-        	
+        		if (!worldEnd) {
                 double deltaX = event.getScreenX() - (scene.getWidth() / 2);
                 double deltaY = event.getScreenY() - (scene.getHeight() / 2);
 
@@ -844,11 +896,12 @@ public class App extends Application {
 //                rotateX.setAngle(cameraRotationAngleX);
                 	robot.mouseMove((int) (scene.getWidth() / 2), (int) (scene.getHeight() / 2));
                 });
-               
+        		}
         });
         scene.setOnMousePressed(e -> {
 //        	 System.out.println(root.getChildren().size());
 //        	System.out.println(teleporters.size());
+        	if (!worldEnd) {
         	var r = e.getPickResult().getIntersectedNode();
         	e.getPickResult().getIntersectedFace();
         	
@@ -859,6 +912,9 @@ public class App extends Application {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
         					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        					if (selectedBlock.equals("circuit")) {
         						break;
         					}
         				}
@@ -923,6 +979,9 @@ public class App extends Application {
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
         				Sound.breakSound(fs.get(i).c.texture);
+        				if (fs.get(i).c.texture.equals("circuit")) {
+        					numCircuits++;
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -941,6 +1000,9 @@ public class App extends Application {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
         					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        					if (selectedBlock.equals("circuit")) {
         						break;
         					}
         				}
@@ -999,6 +1061,9 @@ public class App extends Application {
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
         				Sound.breakSound(fs.get(i).c.texture);
+        				if (fs.get(i).c.texture.equals("circuit")) {
+        					numCircuits++;
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -1017,6 +1082,9 @@ public class App extends Application {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
         					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        					if (selectedBlock.equals("circuit")) {
         						break;
         					}
         				}
@@ -1076,6 +1144,9 @@ public class App extends Application {
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
         				Sound.breakSound(fs.get(i).c.texture);
+        				if (fs.get(i).c.texture.equals("circuit")) {
+        					numCircuits++;
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -1094,6 +1165,9 @@ public class App extends Application {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
         					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        					if (selectedBlock.equals("circuit")) {
         						break;
         					}
         				}
@@ -1152,6 +1226,9 @@ public class App extends Application {
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
         				Sound.breakSound(fs.get(i).c.texture);
+        				if (fs.get(i).c.texture.equals("circuit")) {
+        					numCircuits++;
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -1170,6 +1247,9 @@ public class App extends Application {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
         					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        					if (selectedBlock.equals("circuit")) {
         						break;
         					}
         				}
@@ -1228,6 +1308,9 @@ public class App extends Application {
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
         				Sound.breakSound(fs.get(i).c.texture);
+        				if (fs.get(i).c.texture.equals("circuit")) {
+        					numCircuits++;
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -1246,6 +1329,9 @@ public class App extends Application {
         				if (!godMode) {
         					PickResult pickResult = e.getPickResult();
         					if (pickResult.getIntersectedDistance() > j) {
+        						break;
+        					}
+        					if (selectedBlock.equals("circuit")) {
         						break;
         					}
         				}
@@ -1304,6 +1390,9 @@ public class App extends Application {
 	        				numItems.set(index, numItems.get(index) + 1);
         				}
         				Sound.breakSound(fs.get(i).c.texture);
+        				if (fs.get(i).c.texture.equals("circuit")) {
+        					numCircuits++;
+        				}
         				blocks.remove(fs.get(i).c);
         				Box cub = fs.get(i).c.box;
         				Point3DKey h = new Point3DKey(cub.getTranslateX()/25, cub.getTranslateY()/25, cub.getTranslateZ()/25);
@@ -1318,6 +1407,7 @@ public class App extends Application {
         			}
         		}
         		
+        	}
         	}
         });
     }
@@ -1509,6 +1599,7 @@ public class App extends Application {
         });
         
         scene.setOnKeyPressed(e -> {
+        	if (!worldEnd) {
         	if (e.getCode() == KeyCode.UP) { 
         		if (camera.getFarClip() < 20000) {
         			camera.setFarClip(camera.getFarClip() + 10);
@@ -1693,13 +1784,15 @@ public class App extends Application {
             		selectedBlock = options.get(9);
             	}
             }
+        	}
         });
 
         scene.setOnKeyReleased(e -> {
+        	if (!worldEnd) {
             if (e.getCode() == KeyCode.W) {
                 moveF.stop(); 
                 n.stop();
-                System.out.println("here");
+//                System.out.println("here");
             }
             if (e.getCode() == KeyCode.D) {
                 moveR.stop();
@@ -1730,6 +1823,7 @@ public class App extends Application {
                     moveD.stop();
                 }
             }
+        	}
         });
         
     }
