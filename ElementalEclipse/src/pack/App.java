@@ -622,7 +622,7 @@ public class App extends Application {
         				    backs.setFitWidth(screenX); 
         				     backs.setFitHeight(screenY); 
         				 newRoot.getChildren().add(backs);
-        				ImageView st = new ImageView(new Image("file:Textures/con.png")); // Correct image path
+        				ImageView st = new ImageView(new Image("file:Textures/cong.png")); // Correct image path
         			     st.setFitWidth(800);
         			     st.setFitHeight(200);
         			     st.setTranslateX(screenX/2 - 400);
